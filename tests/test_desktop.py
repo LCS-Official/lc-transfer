@@ -116,7 +116,7 @@ class DesktopTests(unittest.TestCase):
                     self.assertEqual(job['archive'], '')
                     self.assertEqual(item['state'], 'done')
                     saved = Path(item['target'])
-                    self.assertEqual(saved.parent, receiver)
+                    self.assertEqual(saved.parent, receiver.resolve())
                     self.assertEqual(saved.read_bytes(), payloads[entry.name])
                     self.assertIn(str(saved), window.status.text())
                 self.assertEqual((receiver / '照片.jpg').read_bytes(), b'existing local photo')
