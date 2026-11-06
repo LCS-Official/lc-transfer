@@ -48,4 +48,5 @@ class PublicDefaultsTests(unittest.TestCase):
         self.assertIn('private/generated file',problems(Path('android/signing/device.jks'),b'key data',{}))
         self.assertIn('private key',problems(Path('oops.txt'),b'-----BEGIN '+b'PRIVATE KEY-----',{}))
         self.assertIn('GitHub token',problems(Path('oops.txt'),b'ghp_'+b'a'*40,{}))
+        self.assertIn('hidden control character in text',problems(Path('README.md'),b'.'+bytes([8])+b'uild.ps1',{}))
         self.assertFalse(problems(Path('desktop.py'),b'print("hello")',{}))

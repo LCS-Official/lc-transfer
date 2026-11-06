@@ -25,6 +25,8 @@ def problems(relative, payload, fixture_hashes):
     if relative.suffix.lower() in FORBIDDEN_SUFFIXES or relative.name in FORBIDDEN_NAMES or any(p in {'signing','diagnostics','.lc-transfer'} for p in relative.parts):
         issues.append('private/generated file')
     if b'\x00' not in payload:
+        if re.search(rb'[\x01-\x08\x0b\x0c\x0e-\x1f\x7f]', payload):
+            issues.append('hidden control character in text')
         for label, pattern in RULES.items():
             if pattern.search(payload): issues.append(label)
     return issues

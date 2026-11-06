@@ -29,10 +29,10 @@ Windows 与 Android 文件互传客户端。电脑端用 PySide6 / Paramiko，An
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt pyinstaller
-.\.venv\Scripts\python.exe desktop.py
-.\.venv\Scripts\python.exe -m unittest discover -s tests -v
-.uild.ps1
+./.venv/Scripts/python.exe -m pip install -r requirements.txt pyinstaller
+./.venv/Scripts/python.exe desktop.py
+./.venv/Scripts/python.exe -m unittest discover -s tests -v
+./build.ps1
 ```
 
 `build.ps1 -Python <python.exe>` 可选择解释器。便携版目录为 `发布/LC互传/`，必须保留 `_internal`，不能只复制 EXE；构建后生成根目录快捷方式。公开仓库不提供个人环境构建的旧 EXE/APK。
@@ -47,7 +47,7 @@ python -m pip install requests
 python android/prepare_sdk.py
 # 按 SDK 提示接受许可证，并安装：
 # sdkmanager "platforms;android-36" "build-tools;36.0.0"
-.ndroiduild.ps1 -Python .\.venv\Scripts\python.exe
+./android/build.ps1 -Python ./.venv/Scripts/python.exe
 ```
 
 Gradle Wrapper 固定版本和校验和。首次构建需要访问 Google/Maven/Gradle 官方仓库。Android 源码位于 `android/upstream/wolpi-prim-ftpd-f0aa774`，保留上游版权声明。
