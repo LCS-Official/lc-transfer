@@ -1,0 +1,204 @@
+package org.primftpd.pojo;
+
+import org.bouncycastle.asn1.edec.EdECObjectIdentifiers;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.jcajce.provider.asymmetric.edec.KeyFactorySpi;
+import org.bouncycastle.jce.ECNamedCurveTable;
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
+import org.bouncycastle.jce.spec.ECNamedCurveSpec;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.math.BigInteger;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPoint;
+import java.security.spec.ECPublicKeySpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPublicKeySpec;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+
+public class KeyParser {
+
+    // http://blog.oddbit.com/2011/05/08/converting-openssh-public-keys/
+
+    public static final String NAME_RSA = "ssh-rsa";
+    public static final String NAME_ECDSA_256 = "ecdsa-sha2-nistp256";
+    public static final String NAME_ECDSA_384 = "ecdsa-sha2-nistp384";
+    public static final String NAME_ECDSA_521 = "ecdsa-sha2-nistp521";
+    public static final String NAME_ED25519 = "ssh-ed25519";
+    public static final int LENGTH_LENGTH = 4;
+
+    public static final Map<String, Integer> EC_NAME_TO_COORD_SIZE;
+    public static final Map<String, String> EC_NAME_TO_CURVE_NAME;
+
+    static {
+        Map<String, Integer> tmpCoordSize = new HashMap<>();
+        tmpCoordSize.put(NAME_ECDSA_256, 32);
+        tmpCoordSize.put(NAME_ECDSA_384, 48);
+        tmpCoordSize.put(NAME_ECDSA_521, 66);
+        EC_NAME_TO_COORD_SIZE = Collections.unmodifiableMap(tmpCoordSize);
+
+        // see org.bouncycastle.asn1.nist.NISTNamedCurves
+        Map<String, String> tmpCurveName = new HashMap<>();
+        tmpCurveName.put(NAME_ECDSA_256, "P-256");
+        tmpCurveName.put(NAME_ECDSA_384, "P-384");
+        tmpCurveName.put(NAME_ECDSA_521, "P-521");
+        EC_NAME_TO_CURVE_NAME = Collections.unmodifiableMap(tmpCurveName);
+    }
+
+    public static List<PublicKey> parsePublicKeys(InputStream is, List<String> errors)
+            throws IOException {
+        if (is == null) {
+            throw new IllegalArgumentException("input stream cannot be null");
+        }
+        List<PublicKey> keys = new ArrayList<>();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        int lineCounter = 0;
+        while (reader.ready()) {
+            try {
+                String keyLine = reader.readLine();
+                lineCounter++;
+                PublicKey key = parseKeyLine(keyLine);
+                if (key != null) {
+                    keys.add(key);
+                }
+            } catch (Exception e) {
+                errors.add("could not read key at line " + lineCounter + ": " + e.getClass().getName() + ", " + e.getMessage());
+            }
+        }
+
+        return keys;
+    }
+
+    public static PublicKey parseKeyLine(String keyLine) throws Exception {
+        PublicKey key = null;
+        String[] parts = keyLine.split(" ");
+
+        String name = null;
+        String keyEncoded = null;
+        if (parts.length >= 2) {
+            name = parts[0];
+            keyEncoded = parts[1];
+        }
+
+        if (keyEncoded != null) {
+            byte[] keyBytes = Base64.getDecoder().decode(keyEncoded);
+
+            if (NAME_RSA.equals(name)) {
+                key = parsePublicKeyRsa(keyBytes);
+            } else if (NAME_ECDSA_256.equals(name)) {
+                key = parsePublicKeyEcdsa(name, keyBytes);
+            } else if (NAME_ECDSA_384.equals(name)) {
+                key = parsePublicKeyEcdsa(name, keyBytes);
+            } else if (NAME_ECDSA_521.equals(name)) {
+                key = parsePublicKeyEcdsa(name, keyBytes);
+            } else if (NAME_ED25519.equals(name)) {
+                key = parsePublicKeyEd25519(keyBytes);
+            }
+        }
+        return key;
+    }
+
+    protected static PublicKey parsePublicKeyRsa(byte[] keyBytes)
+            throws InvalidKeySpecException, NoSuchAlgorithmException {
+        // name is also included in bytes
+        ByteBuffer byteBuffer = ByteBuffer.wrap(keyBytes);
+        int nameLength = byteBuffer.getInt();
+        // cast to Buffer to avoid issue with java 8, see GH #226
+        ((Buffer)byteBuffer).position(nameLength + LENGTH_LENGTH);
+
+        BigInteger exponent = readNext(byteBuffer);
+        BigInteger modulus = readNext(byteBuffer);
+
+        return createPubKeyRsa(exponent, modulus);
+    }
+
+    protected static BigInteger readNext(ByteBuffer byteBuffer) {
+        int nextLength = byteBuffer.getInt();
+        byte[] nextBytes = new byte[nextLength];
+        byteBuffer.get(nextBytes);
+        return new BigInteger(nextBytes);
+    }
+
+    protected static PublicKey createPubKeyRsa(BigInteger exponent, BigInteger modulus)
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+        RSAPublicKeySpec keySpec = new RSAPublicKeySpec(modulus, exponent);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePublic(keySpec);
+    }
+
+    public static PublicKey parsePublicKeyEcdsa(String name, byte[] keyBytes)
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+        // use as Buffer to avoid issue with java 8, see GH #226
+        ByteBuffer byteBuffer = ByteBuffer.wrap(keyBytes);
+
+        // https://security.stackexchange.com/questions/129910/ecdsa-why-do-ssh-keygen-and-java-generated-public-keys-have-different-sizes
+        final int coordLength = EC_NAME_TO_COORD_SIZE.get(name);
+        byteBuffer.position(keyBytes.length - 2*coordLength);
+        byte[] xBytes = new byte[coordLength];
+        byteBuffer.get(xBytes);
+        BigInteger x = new BigInteger(1, xBytes);
+
+        byteBuffer.position(keyBytes.length - coordLength);
+        byte[] yBytes = new byte[coordLength];
+        byteBuffer.get(yBytes);
+        BigInteger y = new BigInteger(1, yBytes);
+
+        return createPubKeyEcdsa(name, x, y);
+    }
+
+    protected static PublicKey createPubKeyEcdsa(String name, BigInteger x, BigInteger y)
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+        final String curveName = EC_NAME_TO_CURVE_NAME.get(name);
+
+        // On older Android version, Conscrypt may not know the curve.
+        // Hence, we use BC to create the curve spec.
+        ECNamedCurveParameterSpec curveParaSpecBc = ECNamedCurveTable.getParameterSpec(curveName);
+        // Convert to JCE specs so we can use a standard KeyFactory.
+        ECParameterSpec params = new ECNamedCurveSpec(
+                curveName,
+                curveParaSpecBc.getCurve(),
+                curveParaSpecBc.getG(),
+                curveParaSpecBc.getN(),
+                curveParaSpecBc.getH());
+
+        ECPoint w = new ECPoint(x, y);
+        ECPublicKeySpec keySpec = new ECPublicKeySpec(w, params);
+        KeyFactory kf = KeyFactory.getInstance("EC");
+        return kf.generatePublic(keySpec);
+    }
+
+    private static final int KEY_SIZE_ED25519 = 32;
+    public static PublicKey parsePublicKeyEd25519(byte[] keyBytes)
+            throws IOException {
+
+        if (keyBytes.length > KEY_SIZE_ED25519) {
+            int startIndex = keyBytes.length-KEY_SIZE_ED25519;
+            int endIndex = keyBytes.length;
+            keyBytes = Arrays.copyOfRange(keyBytes, startIndex, endIndex);
+        }
+
+        KeyFactorySpi factory = new KeyFactorySpi.Ed25519();
+
+        AlgorithmIdentifier algorithmIdentifier = new AlgorithmIdentifier(EdECObjectIdentifiers.id_Ed25519);
+        SubjectPublicKeyInfo pubKeyInfo = new SubjectPublicKeyInfo(algorithmIdentifier, keyBytes);
+
+        return factory.generatePublic(pubKeyInfo);
+    }
+}

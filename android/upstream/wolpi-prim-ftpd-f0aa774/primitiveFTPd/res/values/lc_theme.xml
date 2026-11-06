@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="LCTransferTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">#309dd3</item>
+        <item name="colorAccent">#309dd3</item>
+        <item name="android:statusBarColor">#ffffff</item>
+        <item name="android:navigationBarColor">#ffffff</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>

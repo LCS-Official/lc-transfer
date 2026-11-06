@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">primiti\nve ftpd</string>
+    <string name="ifacesLabel">Netwerkinterface</string>
+    <string name="ipAddrLabel">IP-adres</string>
+    <string name="ifacesError">Fout:</string>
+    <string name="protocolLabel">Protocol</string>
+    <string name="portLabel">Poort</string>
+    <string name="fingerprintsLabel">Vingerafdrukken van sleutels</string>
+    <string name="generateKeysMessage">Sleutels genereren?</string>
+    <string name="generatingKeysMessage">Sleutels genereren …</string>
+    <string name="generate">Genereren</string>
+    <string name="cancel">Annuleren</string>
+    <string name="state">Status</string>
+    <string name="serverStarted">Draaiend …</string>
+    <string name="serverStopped">Gestopt</string>
+    <string name="permissionRequired">Deze app vereist toestemming voor \"%1$s\"!</string>
+    <string name="permissionNameStorage">Opslag</string>
+    <string name="quickSettingsServerStarted">pFTPd draait …</string>
+    <string name="quickSettingsServerStopped">pFTPd is gestopt</string>
+    <string name="saveAs">Opslaan als</string>
+    <string name="startService">Start server</string>
+    <string name="stopService">Stop server</string>
+    <string name="toggleService">Server snel starten/stoppen</string>
+    <string name="notificationTitle">FTP server</string>
+    <string name="prefs">Instellingen</string>
+    <string name="prefsCategoryTitleAuth">Authenticatie</string>
+    <string name="prefsCategoryTitleConnectivity">Connectiviteit</string>
+    <string name="prefsCategoryTitleSystem">Systeem</string>
+    <string name="prefTitleUser">Gebruikersnaam</string>
+    <string name="usernameLabel">Gebruikersnaam: %s</string>
+    <string name="unknown">Onbekend</string>
+    <string name="prefTitlePort">Poort</string>
+</resources>

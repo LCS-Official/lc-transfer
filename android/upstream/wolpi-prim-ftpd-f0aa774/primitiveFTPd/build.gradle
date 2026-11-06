@@ -1,0 +1,152 @@
+plugins {
+    alias libs.plugins.android.application
+    alias libs.plugins.maven.publish
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(libs.versions.java.toolchain.get())
+    }
+}
+
+android {
+    namespace = "org.primftpd"
+    compileSdk = libs.versions.compileSdk.get().toInteger()
+
+    defaultConfig {
+        applicationId = "org.lc.transfer"
+        versionCode = 78
+        versionName = "8.2-lc.7"
+
+        minSdk = libs.versions.minSdk.get().toInteger()
+        targetSdk = libs.versions.targetSdk.get().toInteger()
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard.cfg'
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest {
+                srcFile 'AndroidManifest.xml'
+            }
+
+            java {
+                srcDir 'src'
+            }
+            res {
+                srcDir 'res'
+            }
+
+            assets {
+                srcDirs = ['assets']
+            }
+        }
+    }
+    packagingOptions {
+        resources {
+            // required due to jars
+            excludes += ['META-INF/LICENSE',
+                         'META-INF/NOTICE',
+                         'META-INF/DEPENDENCIES',
+                         'META-INF/BCKEY.SF',
+                         'META-INF/BCKEY.DSA']
+        }
+    }
+
+    lint {
+        // we cannot be sure that all translations are present
+        abortOnError = false
+    }
+
+    // https://developer.android.com/build/dependencies#dependency-info-play
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles.
+        includeInBundle = false
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+
+        coreLibraryDesugaringEnabled = true
+    }
+}
+
+dependencies {
+    // print dependency tree:
+    // ./gradlew primitiveFTPd:dependencies --configuration releaseCompileClasspath
+    implementation project(':pftpd-pojo-lib')
+    implementation project(':sshd-core-0.14.0')
+
+    coreLibraryDesugaring(libs.google.desugar)
+
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.coordinatorlayout)
+    implementation(libs.androidx.documentfile)
+    implementation(libs.androidx.fragment)
+    implementation(libs.androidx.lifecycle.livedata)
+    implementation(libs.androidx.lifecycle.viewmodel)
+    implementation(libs.androidx.preference)
+    implementation(libs.androidx.recyclerview)
+
+    implementation(libs.google.material)
+
+    implementation(libs.ftpserver.api)
+    implementation(libs.ftpserver.core) {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        exclude group: 'log4j', module: 'log4j'
+        exclude group: 'org.springframework', module: 'spring-context'
+        exclude group: 'org.springframework', module: 'spring-beans'
+    }
+
+    implementation(libs.bouncycastle.bcprov)
+    implementation(libs.bouncycastle.bcpkix)
+    implementation(libs.bouncycastle.bcutil)
+
+    implementation(libs.logback.android)
+    implementation(libs.mina.core)
+    implementation(libs.slf4j.api)
+    implementation(libs.eventbus)
+    implementation(libs.httpclient5)
+    implementation(libs.libsuperuser)
+    implementation(libs.zxing) {
+        exclude group: 'com.android.support'
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'org.primftpd'
+            artifactId = 'app'
+            version = 'latest-SNAPSHOT'
+
+            artifact file('build/outputs/apk/debug/primitiveFTPd-debug.apk')
+        }
+    }
+/*
+    //to debug publishing
+    repositories {
+        maven {
+            url = "file://$projectDir/deploy"
+        }
+    }
+*/
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/wolpi/prim-ftpd")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME") ?: 'never-mind'
+                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}

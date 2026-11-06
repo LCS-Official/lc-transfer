@@ -1,0 +1,919 @@
+package org.primftpd.ui;
+
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.UriPermission;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.database.Cursor;
+import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.provider.DocumentsContract;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.style.UnderlineSpan;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.material.tabs.TabLayout;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+import org.primftpd.R;
+import org.primftpd.crypto.HostKeyAlgorithm;
+import org.primftpd.events.ClientActionEvent;
+import org.primftpd.events.ServerInfoRequestEvent;
+import org.primftpd.events.ServerInfoResponseEvent;
+import org.primftpd.events.ServerStateChangedEvent;
+import org.primftpd.prefs.LoadPrefsUtil;
+import org.primftpd.prefs.StorageType;
+import org.primftpd.util.IpAddressBean;
+import org.primftpd.util.IpAddressProvider;
+import org.primftpd.util.KeyFingerprintBean;
+import org.primftpd.util.SampleAuthKeysFileCreator;
+import org.primftpd.util.ServersRunningBean;
+import org.primftpd.util.ServicesStartStopUtil;
+import org.primftpd.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.ViewModelProvider;
+
+public class PftpdFragment extends Fragment implements RecreateLogger, RadioGroup.OnCheckedChangeListener {
+
+    private final BroadcastReceiver networkStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            logger.debug("network connectivity changed, data str: '{}', action: '{}'",
+                    intent.getDataString(),
+                    intent.getAction());
+            showAddresses();
+        }
+    };
+
+    private static final int REQUEST_CODE_SAF_PERM = 1234;
+
+    public static final String DIALOG_TAG = "dialogs";
+
+    protected Logger logger = LoggerFactory.getLogger(getClass());
+
+    private final IpAddressProvider ipAddressProvider = new IpAddressProvider();
+
+    private ServersRunningBean serversRunning;
+    private long timestampOfLastEvent = 0;
+
+    private ProgressBar addressesLoading;
+    private TextView clientActionView1;
+    private TextView clientActionView2;
+    private TextView clientActionView3;
+
+    private boolean onStartOngoing = false;
+
+    SharedViewModel vm;
+
+    protected int getLayoutId() {
+        return R.layout.main;
+    }
+
+    @Override
+    public void onCreate(@Nullable final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        vm = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+    }
+
+    /**
+     * Called when the activity is first created.
+     */
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // basic setup
+        super.onCreateView(inflater, container, savedInstanceState);
+
+        logger.debug("onCreateView()");
+
+        // viewModel observe key fingerprints
+        vm.onShowKeyFingerprints().observe(getViewLifecycleOwner(),
+                                           aVoid -> showKeyFingerprints());
+        // layout
+        View view = inflater.inflate(getLayoutId(), container, false);
+
+        // calc keys fingerprints
+        PftpdFragment fragment = this;
+        try (ExecutorService executorService = Executors.newSingleThreadExecutor()) {
+            executorService.execute(() -> {
+                logger.trace("CalcPubkeyFinterprintsTask()");
+                vm.getKeyFingerprintProvider().calcPubkeyFingerprints(fragment.getContext());
+                view.post(fragment::showKeyFingerprints);
+            });
+        }
+
+        // create addresses label
+        ((TextView) view.findViewById(R.id.addressesLabel)).setText(
+                String.format("%s (%s)", getText(R.string.ipAddrLabel), getText(R.string.ifacesLabel))
+        );
+
+        // create ports label
+        ((TextView) view.findViewById(R.id.portsLabel)).setText(
+                String.format("%s / %s / %s",
+                        getText(R.string.protocolLabel), getText(R.string.portLabel), getText(R.string.state))
+        );
+
+        // listen for events
+        EventBus.getDefault().register(this);
+
+        // start on open ?
+        Context context = getContext();
+        if (context != null) {
+            SharedPreferences prefs = LoadPrefsUtil.getPrefs(context);
+            Boolean startOnOpen = LoadPrefsUtil.startOnOpen(prefs);
+            if (startOnOpen) {
+                vm.getKeyFingerprintProvider().calcPubkeyFingerprints(context); // see GH issue #204
+                ServicesStartStopUtil.startServers(context,
+                        vm.getPrefsBean(),
+                        vm.getKeyFingerprintProvider(),
+                        requireActivity().getSupportFragmentManager(),
+                        vm.getChosenIp());
+            }
+        }
+
+        // init views (loading & client action texts)
+        addressesLoading = view.findViewById(R.id.addressesLoading);
+        clientActionView1 = view.findViewById(R.id.clientActionsLine1);
+        clientActionView2 = view.findViewById(R.id.clientActionsLine2);
+        clientActionView3 = view.findViewById(R.id.clientActionsLine3);
+
+        // make links clickable
+        ((TextView) view.findViewById(R.id.radioStoragePlain)).setMovementMethod(LinkMovementMethod.getInstance());
+        ((TextView) view.findViewById(R.id.safExplain)).setMovementMethod(LinkMovementMethod.getInstance());
+
+        // create sample authorized_keys files
+        new SampleAuthKeysFileCreator().createSampleAuthorizedKeysFiles(context);
+
+        return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        // server state change events
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        logger.debug("onStart()");
+        onStartOngoing = true;
+
+        vm.loadPrefs(getContext(), logger);
+        showLogindata();
+
+        // init storage type radio
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+        ((RadioGroup) view.findViewById(R.id.radioGroupStorage)).setOnCheckedChangeListener(this);
+        switch (vm.getPrefsBean().getStorageType()) {
+            case PLAIN:
+                ((RadioButton) view.findViewById(R.id.radioStoragePlain)).setChecked(true);
+                break;
+            case ROOT:
+                ((RadioButton) view.findViewById(R.id.radioStorageRoot)).setChecked(true);
+                break;
+            case SAF:
+                ((RadioButton) view.findViewById(R.id.radioStorageSaf)).setChecked(true);
+                showSafUrl(vm.getPrefsBean().getSafUrl());
+                break;
+            case RO_SAF:
+                ((RadioButton) view.findViewById(R.id.radioStorageRoSaf)).setChecked(true);
+                showSafUrl(vm.getPrefsBean().getSafUrl());
+                break;
+            case VIRTUAL:
+                ((RadioButton) view.findViewById(R.id.radioStorageVirtual)).setChecked(true);
+                showSafUrl(vm.getPrefsBean().getSafUrl());
+                break;
+        }
+
+        onStartOngoing = false;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        logger.debug("onResume()");
+
+        // register listener to reprint interfaces table when network connections change
+        // android sends those events when registered in code but not when registered in manifest
+        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        requireActivity().registerReceiver(this.networkStateReceiver, filter);
+
+        // e.g. necessary when ports preferences have been changed
+        displayServersState();
+
+        // check if chosen SAF directory can be accessed
+        checkSafAccess();
+
+        // validate bind IP
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+        try (ExecutorService executorService = Executors.newSingleThreadExecutor()) {
+            executorService.execute(() -> {
+                if (!ipAddressProvider.isIpAvail(vm.getPrefsBean().getBindIp())) {
+                    String msg = "IP " + vm.getPrefsBean().getBindIp() +
+                            " is currently not assigned to an interface. May lead to a crash.";
+                    view.post(() ->
+                        Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show()
+                    );
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        logger.debug("onPause()");
+
+        // unregister broadcast receiver
+        requireActivity().unregisterReceiver(this.networkStateReceiver);
+    }
+
+    Intent buildSafIntend() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent.addFlags(
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        return intent;
+    }
+
+    @Override
+    public void onCheckedChanged(@NonNull RadioGroup group, int checkedId) {
+        logger.debug("onCheckedChanged()");
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+        view.findViewById(R.id.safUriLabel).setVisibility(View.GONE);
+        view.findViewById(R.id.safUri).setVisibility(View.GONE);
+
+        StorageType storageType = null;
+
+        Intent intent = buildSafIntend();
+
+        int crb = group.getCheckedRadioButtonId();
+        try {
+            if (crb == R.id.radioStoragePlain) {
+                storageType = StorageType.PLAIN;
+            } else if (crb == R.id.radioStorageRoot) {
+                storageType = StorageType.ROOT;
+            } else if (crb == R.id.radioStorageSaf) {
+                storageType = StorageType.SAF;
+                if (!onStartOngoing) {
+                    startActivityForResult(intent, REQUEST_CODE_SAF_PERM);
+                }
+            } else if (crb == R.id.radioStorageRoSaf) {
+                storageType = StorageType.RO_SAF;
+                if (!onStartOngoing) {
+                    startActivityForResult(intent, REQUEST_CODE_SAF_PERM);
+                }
+            } else if (crb == R.id.radioStorageVirtual) {
+                storageType = StorageType.VIRTUAL;
+                if (!onStartOngoing) {
+                    startActivityForResult(intent, REQUEST_CODE_SAF_PERM);
+                }
+            }
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(getContext(),
+                    "SAF seems to be broken on your device :(", Toast.LENGTH_SHORT).show();
+            storageType = StorageType.PLAIN;
+        }
+
+        if (storageType != null) {
+            SharedPreferences prefs = LoadPrefsUtil.getPrefs(getContext());
+            LoadPrefsUtil.storeStorageType(prefs, storageType);
+        }
+
+        if (storageType == StorageType.PLAIN || storageType == StorageType.ROOT) {
+            vm.loadPrefs(getContext(), logger);
+            checkSafAccess();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+        logger.debug("onActivityResult()");
+        if (requestCode == REQUEST_CODE_SAF_PERM && resultCode == Activity.RESULT_OK) {
+            if (intent != null) {
+                Uri uri = intent.getData();
+                String uriStr = uri != null ? uri.toString() : null;
+                logger.debug("got uri: '{}'", uriStr);
+                if (uri == null) {
+                    logger.warn("did not get SAP URI");
+                    return;
+                }
+
+                int modeFlags =
+                        (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+                // release old permissions
+                FragmentActivity activity = requireActivity();
+                String oldUrl = vm.getPrefsBean().getSafUrl();
+                if (!StringUtils.isBlank(oldUrl)) {
+                    try {
+                        activity.getContentResolver()
+                                .releasePersistableUriPermission(Uri.parse(oldUrl), modeFlags);
+                    } catch (SecurityException e) {
+                        logger.info(
+                                "SecurityException while calling releasePersistableUriPermission()");
+                        logger.trace("", e);
+                    }
+                }
+
+                // persist permissions
+                try {
+                    activity.grantUriPermission(activity.getPackageName(), uri, modeFlags);
+                    activity.getContentResolver().takePersistableUriPermission(uri, modeFlags);
+                } catch (SecurityException e) {
+                    logger.info("SecurityException while calling takePersistableUriPermission()");
+                    logger.trace("", e);
+                }
+
+                // store uri
+                SharedPreferences prefs = LoadPrefsUtil.getPrefs(getContext());
+                LoadPrefsUtil.storeSafUrl(prefs, uriStr);
+
+                // display uri
+                showSafUrl(uriStr);
+
+                // update prefs
+                vm.loadPrefs(getContext(), logger);
+
+                // note: onResume() is about to be called
+            }
+        }
+    }
+
+    protected void checkSafAccess() {
+        boolean hideWarning = true;
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+        RadioButton safRadio = view.findViewById(R.id.radioStorageSaf);
+        if (vm.getPrefsBean().getStorageType() == StorageType.SAF
+                || vm.getPrefsBean().getStorageType() == StorageType.RO_SAF) {
+            // let's see if the OS has persisted something for us
+            List<UriPermission> persistedUriPermissions =
+                    requireActivity().getContentResolver().getPersistedUriPermissions();
+            for (UriPermission uriPerm : persistedUriPermissions) {
+                logger.debug("persisted uri perm: '{}', pref uri: '{}'",
+                        uriPerm.getUri(), vm.getPrefsBean().getSafUrl());
+            }
+            if (persistedUriPermissions.isEmpty()) {
+                logger.debug("no persisted uri perm");
+            }
+
+            Cursor cursor = null;
+            try {
+                String url = vm.getPrefsBean().getSafUrl();
+                Uri uri = Uri.parse(url);
+                cursor = requireActivity().getContentResolver().query(
+                        uri,
+                        new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID},
+                        null,
+                        null,
+                        null,
+                        null);
+                if (cursor == null) {
+                    throw new NullPointerException("cursor is null, do not have SAF access");
+                }
+                cursor.moveToFirst();
+
+            } catch (UnsupportedOperationException e) {
+                // this seems to be the normal case for directory uris
+            } catch (SecurityException | NullPointerException e) {
+                logger.debug("checkSafAccess failed: {}", e.toString());
+                logger.trace("", e);
+                hideWarning = false;
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+        }
+        if (hideWarning) {
+            // remove warning if it was present
+            safRadio.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+        } else {
+            final boolean darkMode = UiModeUtil.isDarkMode(getResources());
+            int icon = darkMode
+                    ? R.drawable.ic_warning_white_36dp
+                    : R.drawable.ic_warning_black_36dp;
+            safRadio.setCompoundDrawablesWithIntrinsicBounds(0, 0, icon, 0);
+        }
+    }
+
+    protected boolean isLeftToRight() {
+        Configuration config = getResources().getConfiguration();
+        return config.getLayoutDirection() == View.LAYOUT_DIRECTION_LTR;
+    }
+
+    /**
+     * Creates table containing network interfaces.
+     */
+    protected void showAddresses() {
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+
+        // clear old entries
+        LinearLayout container = view.findViewById(R.id.addressesContainer);
+        container.removeAllViews();
+
+        // show spinner
+        addressesLoading.setVisibility(View.VISIBLE);
+
+        try (ExecutorService executorService = Executors.newSingleThreadExecutor()) {
+            executorService.execute(() ->
+                doShowAddresses(view, container)
+            );
+        }
+    }
+
+    protected void doShowAddresses(View view, LinearLayout container) {
+        SharedPreferences prefs = LoadPrefsUtil.getPrefs(getContext());
+        boolean chooseBindIp = prefs.getBoolean(
+                LoadPrefsUtil.PREF_KEY_CHOOSE_BIND_IP,
+                Boolean.FALSE);
+
+        final RadioGroup[] radioGroupHolder = new RadioGroup[1];
+        RadioGroup radioGroup = null;
+        final Map<Integer, String> radioButtonIdToIpaddr = new HashMap<>();
+        if (chooseBindIp) {
+            radioGroup = new RadioGroup(this.getContext());
+        } else {
+            // reset chosenIp, if user has disabled the preference again
+            vm.setChosenIp(null);
+        }
+        radioGroupHolder[0] = radioGroup;
+
+        boolean isLeftToRight = isLeftToRight();
+        List<IpAddressBean> ipAddressBeans = ipAddressProvider.ipAddressTexts(
+                getContext(), true, isLeftToRight);
+
+        view.post(() -> {
+            addressesLoading.setVisibility(View.GONE);
+
+            int idx = 42;
+            for (IpAddressBean ipAddressBean : ipAddressBeans) {
+                if (chooseBindIp) {
+                    RadioButton radio = new RadioButton(this.getContext());
+                    radioGroupHolder[0].addView(radio);
+                    radio.setText(ipAddressBean.getDisplayName());
+                    radio.setId(idx);
+                    radioButtonIdToIpaddr.put(idx, ipAddressBean.getIpAddress());
+                    if (vm.getChosenIp() != null) {
+                        if (ipAddressBean.getIpAddress().equals(vm.getChosenIp())) {
+                            radio.setChecked(true);
+                        }
+                    } else if (ipAddressBean.getIpAddress().equals(vm.getPrefsBean().getBindIp())) {
+                        radio.setChecked(true);
+                    }
+                    idx = idx + 1;
+                } else {
+                    TextView textView = new TextView(container.getContext());
+                    container.addView(textView);
+                    textView.setText(ipAddressBean.getDisplayName());
+                    textView.setGravity(Gravity.CENTER_HORIZONTAL);
+                    textView.setTextIsSelectable(true);
+                }
+            }
+
+            if (chooseBindIp) {
+                container.addView(radioGroupHolder[0]);
+                radioGroupHolder[0].setOnCheckedChangeListener((group, checkedId) ->
+                        vm.setChosenIp(radioButtonIdToIpaddr.get(checkedId))
+                );
+            }
+        });
+    }
+
+    @SuppressLint("SetTextI18n")
+    protected void showPortsAndServerState() {
+        boolean isLeftToRight = isLeftToRight();
+
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+        if (isLeftToRight) {
+            ((TextView) view.findViewById(R.id.ftpTextView))
+                    .setText("ftp / " + vm.getPrefsBean().getPortStr() + " / " +
+                            getText(serversRunning.ftp
+                                    ? R.string.serverStarted
+                                    : R.string.serverStopped));
+
+            ((TextView) view.findViewById(R.id.sftpTextView))
+                    .setText("sftp / " + vm.getPrefsBean().getSecurePortStr() + " / " +
+                            getText(serversRunning.ssh
+                                    ? R.string.serverStarted
+                                    : R.string.serverStopped));
+        } else {
+            ((TextView) view.findViewById(R.id.ftpTextView))
+                    .setText(vm.getPrefsBean().getPortStr() + " / " +
+                            getText(serversRunning.ftp
+                                    ? R.string.serverStarted
+                                    : R.string.serverStopped)
+                            + " / " + "ftp");
+
+            ((TextView) view.findViewById(R.id.sftpTextView))
+                    .setText(vm.getPrefsBean().getSecurePortStr() + " / " +
+                            getText(serversRunning.ssh
+                                    ? R.string.serverStarted
+                                    : R.string.serverStopped)
+                            + " / " + "sftp");
+        }
+    }
+
+    protected void showLogindata() {
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+
+        TextView usernameView = view.findViewById(R.id.usernameTextView);
+        usernameView.setText(getString(R.string.usernameLabel, vm.getPrefsBean().getUserName()));
+
+        TextView anonymousView = view.findViewById(R.id.anonymousLoginTextView);
+        anonymousView.setText(getString(R.string.isAnonymous, vm.getPrefsBean().isAnonymousLogin()));
+
+        TextView passwordPresentView = view.findViewById(R.id.passwordPresentTextView);
+        passwordPresentView.setText(getString(R.string.passwordPresent,
+                StringUtils.isNotEmpty(vm.getPrefsBean().getPassword())));
+
+        TextView pubKeyAuthView = view.findViewById(R.id.pubKeyAuthTextView);
+        pubKeyAuthView.setText(getString(R.string.pubKeyAuth, vm.getPrefsBean().isPubKeyAuth()));
+
+        displayNormalStorageAccess();
+        displayFullStorageAccess();
+        displayMediaLocationAccess();
+        displayNotificationPermission();
+    }
+
+    private final ActivityResultLauncher<String[]> permissionRequestLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestMultiplePermissions(),
+            isGranted -> showLogindata());
+
+    private void displayNormalStorageAccess() {
+        // Android 10 and lower
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            displayPermission(
+                    R.id.hasNormalStorageAccessTextView,
+                    R.string.hasNormalAccessToStorage,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    false);
+        }
+    }
+
+    private void displayFullStorageAccess() {
+        // Android 11+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            View view = getView();
+            if (view == null) {
+                return;
+            }
+            TextView hasFullStorageAccessTextView = view.findViewById(R.id.hasFullStorageAccessTextView);
+            boolean hasFullStorageAccess = Environment.isExternalStorageManager();
+            String hasStorageAccessStr = getString(R.string.hasFullAccessToStorage, hasFullStorageAccess);
+
+            if (!hasFullStorageAccess) {
+                buildPermissionRequestLink(hasFullStorageAccessTextView, hasStorageAccessStr, v -> {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                    Uri uri = Uri.fromParts("package", requireActivity().getPackageName(), null);
+                    intent.setData(uri);
+                    startActivity(intent);
+                });
+            } else {
+                hasFullStorageAccessTextView.setText(hasStorageAccessStr);
+            }
+        }
+    }
+
+    private void displayMediaLocationAccess() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            displayPermission(
+                    R.id.hasMediaLocationAccessTextView,
+                    R.string.hasAccessToMediaLocation,
+                    Manifest.permission.ACCESS_MEDIA_LOCATION,
+                    false);
+        }
+    }
+
+    private void displayNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            displayPermission(
+                    R.id.hasNotificationPermissionTextView,
+                    R.string.hasNotificationPermission,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                    true);
+        }
+    }
+
+    private void displayPermission(int textViewId, int textId, String permission,
+                                   boolean highlightMissing) {
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+        boolean hasPermission = hasPermission(permission);
+        TextView textView = view.findViewById(textViewId);
+        if (highlightMissing) {
+            if (!hasPermission) {
+                textView.setBackgroundColor(Color.parseColor("#FF0000"));
+            } else {
+                Context context = getContext();
+                if (context != null) {
+                    TypedValue typedVal = new TypedValue();
+                    context.getTheme().resolveAttribute(
+                            android.R.attr.windowBackground,
+                            typedVal,
+                            true);
+                    int bgColor = typedVal.data;
+                    textView.setBackgroundColor(bgColor);
+                }
+            }
+        }
+        String hasPermissionStr = getString(textId, hasPermission);
+        if (!hasPermission) {
+            buildPermissionRequestLink(
+                    textView,
+                    hasPermissionStr,
+                    v -> permissionRequestLauncher.launch(new String[]{permission}));
+        } else {
+            textView.setText(hasPermissionStr);
+        }
+    }
+
+    protected void buildPermissionRequestLink(
+            TextView textView,
+            String baseText,
+            View.OnClickListener onClickListener) {
+        String request = getString(R.string.Request);
+        String completeText = baseText + " " + request;
+        SpannableString spannable = new SpannableString(completeText);
+        spannable.setSpan(new UnderlineSpan(), baseText.length() + 1, completeText.length(), 0);
+        textView.setText(spannable);
+        textView.setOnClickListener(onClickListener);
+    }
+
+    protected boolean hasPermission(String permission) {
+        Context context = getContext();
+        if (context != null) {
+            logger.trace("hasPermission({})", permission);
+            return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED;
+        }
+        return true;
+    }
+
+    protected void showSafUrl(String url) {
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+        view.findViewById(R.id.safUriLabel).setVisibility(View.VISIBLE);
+        TextView safUriView = view.findViewById(R.id.safUri);
+        safUriView.setVisibility(View.VISIBLE);
+        safUriView.setText(url);
+
+        safUriView.setOnClickListener(v -> {
+            logger.trace("SAF URL refreshButton OnClickListener");
+            Intent intent = buildSafIntend();
+            if (!onStartOngoing) {
+                startActivityForResult(intent, REQUEST_CODE_SAF_PERM);
+            }
+        });
+    }
+
+    @SuppressLint("SetTextI18n")
+    public void showKeyFingerprints() {
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+        // find algo to show
+        HostKeyAlgorithm chosenAlgo = vm.getKeyFingerprintProvider().findPreferredHostKeyAlog(this.getContext());
+
+        // show info about chosen algo and it's key
+        ((TextView) view.findViewById(R.id.keyFingerprintMd5Label))
+                .setText("MD5 (" + chosenAlgo.getDisplayName() + ")");
+        ((TextView) view.findViewById(R.id.keyFingerprintSha1Label))
+                .setText("SHA1 (" + chosenAlgo.getDisplayName() + ")");
+        ((TextView) view.findViewById(R.id.keyFingerprintSha256Label))
+                .setText("SHA256 (" + chosenAlgo.getDisplayName() + ")");
+
+        KeyFingerprintBean keyFingerprintBean = vm.getKeyFingerprintProvider().getFingerprints().get(chosenAlgo);
+
+        if (keyFingerprintBean != null) {
+            ((TextView) view.findViewById(R.id.keyFingerprintMd5TextView))
+                    .setText(keyFingerprintBean.getFingerprintMd5());
+            ((TextView) view.findViewById(R.id.keyFingerprintSha1TextView))
+                    .setText(keyFingerprintBean.getFingerprintSha1());
+            ((TextView) view.findViewById(R.id.keyFingerprintSha256TextView))
+                    .setText(keyFingerprintBean.getFingerprintSha256());
+        }
+
+        // create onRefreshListener
+        View refreshButton = view.findViewById(R.id.keyFingerprintsLabel);
+        refreshButton.setOnClickListener(v -> {
+            logger.trace("refreshButton OnClickListener");
+            GenKeysAskDialogFragment askDiag = new GenKeysAskDialogFragment();
+            askDiag.show(requireActivity().getSupportFragmentManager(), DIALOG_TAG);
+        });
+
+        // link to keys fingerprints activity
+        TextView showAllKeysFingerprints = view.findViewById(R.id.allKeysFingerprintsLabel);
+        CharSequence text = showAllKeysFingerprints.getText();
+        SpannableString spannable = new SpannableString(text);
+        spannable.setSpan(new UnderlineSpan(), 0, text.length(), 0);
+        showAllKeysFingerprints.setText(spannable);
+        showAllKeysFingerprints.setOnClickListener(v -> {
+            TabLayout tabLayout = view.getRootView().findViewById(R.id.tabs);
+            TabLayout.Tab tab = tabLayout.getTabAt(vm.getFingerprintsFragmentTabIndex());
+            if (tab != null) {
+                tab.select();
+            }
+        });
+    }
+
+    private boolean isEventInTime(Object event) {
+        long currentTime = System.currentTimeMillis();
+        long offset = currentTime - timestampOfLastEvent;
+        boolean inTime = offset > 20;
+        if (inTime) {
+            logger.debug("handling event '{}', offset: {} ms", event.getClass().getName(), offset);
+            timestampOfLastEvent = currentTime;
+        } else {
+            logger.debug("ignoring event '{}', offset: {} ms", event.getClass().getName(), offset);
+        }
+        return inTime;
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    @SuppressWarnings("never used")
+    public void onEvent(ServerStateChangedEvent event) {
+        logger.debug("got ServerStateChangedEvent");
+        if (isEventInTime(event)) {
+            displayServersState();
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    @SuppressWarnings("never used")
+    public void onEvent(ServerInfoResponseEvent event) {
+        int numberOfFiles = event.getQuickShareNumberOfFiles();
+        logger.debug("got ServerInfoResponseEvent, QuickShare numberOfFiles: {}", numberOfFiles);
+        if (isEventInTime(event)) {
+            if (numberOfFiles >= 0) {
+                View view = getView();
+                if (view == null) {
+                    return;
+                }
+                TextView quickShareInfo = view.findViewById(R.id.quickShareInfo);
+                quickShareInfo.setVisibility(View.VISIBLE);
+                quickShareInfo.setText(
+                        String.format(getString(R.string.quickShareInfoActivityV2), numberOfFiles));
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    @SuppressWarnings("never used")
+    public void onEvent(ClientActionEvent event) {
+        String clientAction = ClientActionFragment.format(event);
+
+        clientActionView2.setVisibility(View.VISIBLE);
+        clientActionView3.setVisibility(View.VISIBLE);
+
+        clientActionView1.setText(clientActionView2.getText());
+        clientActionView2.setText(clientActionView3.getText());
+        clientActionView3.setText(clientAction);
+    }
+
+    protected void displayServersState() {
+        logger.debug("displayServersState()");
+
+        checkServicesRunning();
+        Boolean running = null;
+        if (serversRunning != null) {
+            running = serversRunning.atLeastOneRunning();
+        }
+
+        // should be triggered by onCreateOptionsMenu() to avoid icon flicker
+        // when invoked via notification
+        updateFallbackButtonStates(running);
+
+        // by checking ButtonStates we get info which services are running
+        // that is displayed in portsTable
+        // as there are no icons when this runs first time,
+        // we don't get serversRunning, yet
+        if (serversRunning != null) {
+            showPortsAndServerState();
+        }
+
+        // if running, query server info
+        if (Boolean.TRUE.equals(running)) {
+            logger.debug("posting ServerInfoRequestEvent");
+            EventBus.getDefault().post(new ServerInfoRequestEvent());
+        } else {
+            View view = getView();
+            if (view != null) {
+                view.findViewById(R.id.quickShareInfo).setVisibility(View.GONE);
+            }
+        }
+    }
+
+    protected void checkServicesRunning() {
+        logger.debug("checkServicesRunning()");
+        Context context = getContext();
+        if (context != null) {
+            this.serversRunning = ServicesStartStopUtil.checkServicesRunning(context);
+        }
+    }
+
+    protected void updateFallbackButtonStates(Boolean running) {
+        logger.debug("updateButtonStates()");
+
+        boolean atLeastOneRunning;
+        if (running == null) {
+            checkServicesRunning();
+            atLeastOneRunning = serversRunning.atLeastOneRunning();
+        } else {
+            atLeastOneRunning = running;
+        }
+
+        // update fallback buttons
+        View view = getView();
+        if (view != null) {
+            Button fallbackButtonToggle = view.findViewById(R.id.fallbackButtonToggleServer);
+            if (fallbackButtonToggle != null) {
+                if (atLeastOneRunning) {
+                    fallbackButtonToggle.setText(R.string.stopService);
+                } else {
+                    fallbackButtonToggle.setText(R.string.startService);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void recreateLogger() {
+        this.logger = LoggerFactory.getLogger(getClass());
+    }
+}

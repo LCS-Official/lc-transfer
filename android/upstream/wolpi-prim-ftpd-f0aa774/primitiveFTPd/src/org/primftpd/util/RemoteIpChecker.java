@@ -1,0 +1,48 @@
+package org.primftpd.util;
+
+import org.primftpd.events.ClientActionEvent;
+import org.primftpd.services.PftpdService;
+import org.slf4j.Logger;
+
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+
+public class RemoteIpChecker {
+
+    public static boolean ipAllowed(SocketAddress remoteAddress, PftpdService service, Logger logger) {
+        String pattern = service.getPrefsBean().getAllowedIpsPattern();
+        if (StringUtils.isNotBlank(pattern)) {
+            if (remoteAddress instanceof InetSocketAddress) {
+                InetSocketAddress inetSock = (InetSocketAddress) remoteAddress;
+                String origIp = inetSock.getAddress().toString();
+                String ip = IpAddressProvider.extractIp(origIp);
+                boolean allowed = doCheck(ip, pattern);
+                logger.info("[checking whether remote ip is allowed] remote ip: '{}', pattern: '{}', allowed? '{}'",
+                        ip, pattern, allowed);
+                if (!allowed) {
+                    service.postClientAction(
+                            ClientActionEvent.getStorage(service),
+                            ClientActionEvent.ClientAction.CONNECT,
+                            ip,
+                            "",
+                            "forbidden (system ip string: " + origIp + ")");
+                }
+                return allowed;
+            } else {
+                logger.warn("cannot check remote IP, bad class. remote addr: {}, class: {}",
+                        remoteAddress.toString(),
+                        remoteAddress.getClass().getSimpleName());
+            }
+        } else {
+            logger.debug("not checking ip pattern: '{}'", pattern);
+        }
+        return true;
+    }
+
+    private static boolean doCheck(String ip, String pattern) {
+        if (pattern.endsWith("*")) {
+            return ip.startsWith(pattern.substring(0, pattern.length()-1));
+        }
+        return ip.equals(pattern);
+    }
+}

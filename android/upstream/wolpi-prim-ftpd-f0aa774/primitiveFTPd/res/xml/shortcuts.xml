@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="StartServer"
+        android:enabled="true"
+        android:icon="@drawable/ic_play_black_18dp"
+        android:shortcutShortLabel="@string/startService"
+        android:shortcutLongLabel="@string/startService">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="org.lc.transfer"
+            android:targetClass="org.primftpd.ui.StartServerAndExitActivity" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="mobileUi"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher"
+        android:shortcutShortLabel="@string/mobileUiShort"
+        android:shortcutLongLabel="@string/mobileUiLong">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="org.lc.transfer"
+            android:targetClass="org.primftpd.ui.MainTabsActivity" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="LeanbackUi"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher"
+        android:shortcutShortLabel="@string/tvUiShort"
+        android:shortcutLongLabel="@string/tvUiLong">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="org.lc.transfer"
+            android:targetClass="org.primftpd.ui.LeanbackActivity" />
+    </shortcut>
+</shortcuts>

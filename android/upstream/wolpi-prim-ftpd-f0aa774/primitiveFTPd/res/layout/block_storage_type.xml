@@ -1,0 +1,101 @@
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:id="@+id/storageContainer"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        >
+        <TextView
+            android:id="@+id/storageTypeLabel"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:text="@string/storageType"
+            />
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/radioGroupStorage">
+            <RadioButton android:id="@+id/radioStoragePlain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/storageTypePlainV2"
+                android:nextFocusUp="@+id/fallbackButtonToggleServer"
+                android:nextFocusLeft="@+id/fallbackButtonToggleServer"
+                android:nextFocusRight="@+id/keyFingerprintsLabel"
+                />
+            <RadioButton android:id="@+id/radioStorageRoot"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/storageTypeRoot"
+                android:nextFocusLeft="@+id/radioStoragePlain"
+                android:nextFocusRight="@+id/keyFingerprintsLabel"
+                />
+            <RadioButton android:id="@+id/radioStorageSaf"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/storageTypeSaf"
+                android:nextFocusLeft="@+id/radioStorageRoot"
+                android:nextFocusRight="@+id/keyFingerprintsLabel"
+                />
+            <RadioButton android:id="@+id/radioStorageRoSaf"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/storageTypeRoSaf"
+                android:nextFocusLeft="@+id/radioStorageSaf"
+                android:nextFocusRight="@+id/keyFingerprintsLabel"
+                />
+            <RadioButton android:id="@+id/radioStorageVirtual"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/storageTypeVirtual"
+                android:nextFocusLeft="@+id/radioStorageRoSaf"
+                android:nextFocusRight="@+id/keyFingerprintsLabel"
+                android:nextFocusDown="@+id/keyFingerprintsLabel"
+                android:nextFocusForward="@+id/keyFingerprintsLabel"
+                />
+        </RadioGroup>
+    </LinearLayout>
+    <TextView
+        android:id="@+id/safExplainHeading"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="@string/safExplainHeading"
+        android:textStyle="bold"
+        />
+    <TextView
+        android:id="@+id/safExplain"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="@string/safExplainV2"
+        />
+    <TextView
+        android:id="@+id/safUriLabel"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="@string/selectedSafUri"
+        android:textStyle="bold"
+        android:visibility="gone"
+        />
+    <TextView
+        android:id="@+id/safUri"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:visibility="gone"
+        android:textIsSelectable="false"
+        android:selectAllOnFocus="true"
+        app:drawableRightCompat="?attr/iconRefresh"
+        />
+
+</merge>

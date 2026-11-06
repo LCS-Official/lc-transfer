@@ -1,0 +1,23 @@
+plugins {
+    alias libs.plugins.java
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(libs.versions.java.toolchain.get())
+    }
+
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+dependencies {
+    implementation(libs.bouncycastle.bcprov)
+    implementation(libs.bouncycastle.bcpkix)
+    implementation(libs.bouncycastle.bcutil)
+
+    compileOnly(libs.slf4j.api)
+
+    testImplementation(libs.slf4j.api)
+    testImplementation(libs.junit)
+}

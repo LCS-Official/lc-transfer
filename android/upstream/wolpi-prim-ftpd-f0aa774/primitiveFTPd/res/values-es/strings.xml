@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">primitive ftpd</string>
+    <string name="ifacesLabel">Interfaz de red</string>
+    <string name="ipAddrLabel">Dirección IP</string>
+    <string name="ifacesError">Error:</string>
+    <string name="protocolLabel">Protocolo</string>
+    <string name="portLabel">Puerto</string>
+    <string name="fingerprintsLabel">Huellas de las claves</string>
+    <string name="allKeysFingerprintsLabel">Mostrar huellas de todas las claves</string>
+    <string name="generateKeysMessage">¿Generar claves?</string>
+    <string name="generatingKeysMessage">Generando las claves…</string>
+    <string name="generate">Generar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="state">Estado</string>
+    <string name="serverStarted">En uso…</string>
+    <string name="serverStopped">Detenido</string>
+    <string name="permissionRequired">¡Se necesita el permiso «%1$s» para que esta aplicación funcione!</string>
+    <string name="permissionNameStorage">Almacenamiento</string>
+    <string name="quickSettingsServerStarted">pFTPd en uso…</string>
+    <string name="quickSettingsServerStopped">pFTPd detenido</string>
+    <string name="saveAs">Guardar como</string>
+    <string name="startService">Iniciar servidor</string>
+    <string name="stopService">Detener servidor</string>
+    <string name="toggleService">Conmutar inicio/parada del servidor</string>
+    <string name="notificationTitle">Servidor FTP</string>
+    <string name="haveToSetAuthMechanism">Primero debe establecer un método de autenticación</string>
+    <string name="serverRunning">El servidor FTP se está ejecutando</string>
+    <string name="serverCouldNotBeStarted">No se ha podido iniciar el servidor. Error:</string>
+    <string name="portInvalid_v2">El puerto no es válido. Debe ser un valor de 1024 a 64000.</string>
+    <string name="portsEqual_v2">Ambos puertos son iguales, esto no es posible.</string>
+    <string name="restartServer">Reinicie el servidor para que los cambios surtan efecto.</string>
+    <string name="couldNotReadKeyAuthKey">No se ha podido leer la clave pública para la autenticación. Más detalles en el registro.</string>
+    <string name="ftpPassivePortsInvalid">La lista de puertos de FTP pasivo no es válida.</string>
+    <string name="prefs">Preferencias</string>
+    <string name="prefsCategoryTitleAuth">Autenticación</string>
+    <string name="prefsCategoryTitleConnectivity">Conectividad</string>
+    <string name="prefsCategoryTitleUi">Interfaz de usuario</string>
+    <string name="prefsCategoryTitleSystem">Sistema</string>
+    <string name="prefTitleUser">Nombre de usuario</string>
+    <string name="prefSummaryUser">Nombre de usuario del servidor FTP</string>
+    <string name="prefTitlePassword">Contraseña</string>
+    <string name="prefSummaryPassword">La contraseña del usuario del servidor FTP</string>
+    <string name="prefTitlePort">Puerto</string>
+    <string name="prefSummaryPort">El puerto del servidor FTP</string>
+    <string name="prefTitlePortSecure">Puerto seguro</string>
+    <string name="prefSummaryPortSecure">El puerto del servidor FTP para una conexión cifrada (SFTP)</string>
+    <string name="prefBindIp">Vincular a una IP</string>
+    <string name="prefSummaryBindIp">Si quiere que los servidores escuchen una sola interfaz de red (dirección IP).</string>
+    <string name="prefTitleStartDir">Carpeta de inicio del servidor</string>
+    <string name="prefSummaryStartDir">Carpeta inicial al conectarse al servidor</string>
+    <string name="prefTitleAnnounce">Anunciar servidor (LAN)</string>
+    <string name="prefSummaryAnnounce">Anunciar el servidor FTP en la red local (LAN) mediante DNS-SD (Bonjour). Puede causar fallos en algunos dispositivos.</string>
+    <string name="prefTitleAnnounceName">Nombre del servidor</string>
+    <string name="prefSummaryAnnounceName">Nombre con que anunciar el servidor en la red.</string>
+    <string name="prefTitleWakelock">Evitar modo de espera</string>
+    <string name="prefSummaryWakelock">Evita el modo de espera mientras el servidor está encendido. El modo de espera puede causar interrupciones en las descargas y subidas.</string>
+    <string name="prefTitleWhichServerToStart">Servidor(es) a iniciar</string>
+    <string name="prefSummaryWhichServerToStart">Escoja si quiere iniciar solo el servidor FTP, solo el SFTP, o ambos.</string>
+    <string name="prefTitleStartOnBoot">Iniciar durante el arranque</string>
+    <string name="prefSummaryStartOnBoot">Iniciar el servidor durante el arranque del sistema.</string>
+    <string name="prefTitleStartOnOpen">Iniciar al abrir</string>
+    <string name="prefSummaryStartOnOpen">Iniciar el servidor al abrir la aplicación.</string>
+    <string name="prefTitleShowConnectionInfoInNotification">Información en área de notificaciones</string>
+    <string name="prefSummaryShowConnectionInfoInNotification">Muestra información de la conexión en la notificación (por ejemplo la IP).</string>
+    <string name="prefTitleSshowIpv4InNotification">Mostrar las direcciones IPv4 en la notificación</string>
+    <string name="prefSummaryShowIpv4InNotification">Muestra las direcciones IPv4 en la notificación si la información de conexión está activada.</string>
+    <string name="prefTitleSshowIpv6InNotification">Mostrar las direcciones IPv6 en la notificación</string>
+    <string name="prefSummaryShowIpv6InNotification">Muestra las direcciones IPv6 en la notificación si la información de conexión está activada.</string>
+    <string name="prefTitleShowStartStopNotification">Notificación de encendido/apagado</string>
+    <string name="prefSummaryShowStartStopNotification">Muestra en todo momento una notificación para encender y apagar el/los servidor(es) de forma rápida.</string>
+    <string name="prefTitlePubKeyAuth">Autenticación de clave pública</string>
+    <string name="prefSummaryPubKeyAuth_v2">Si activa esta opción, guarde su clave pública SSH2 en %s. El archivo debe tener cada clave en una línea. Solo para SFTP.</string>
+    <string name="prefTitleAnonymousLogin">Sesión anónima</string>
+    <string name="prefSummaryAnonymousLogin">Permite que los clientes se conecten al servidor sin usuario ni contraseña.</string>
+    <string name="prefTitleFtpPassivePorts">Puertos de FTP pasivo</string>
+    <string name="prefSummaryFtpPassivePorts">Los puertos para conexiones FTP pasivas. Los valores pueden ser, un solo puerto, o una lista o rango de puertos. Por ejemplo 5678,5700-5710,5800,5900.</string>
+    <string name="prefTitleIdleTimeout">Tiempo de inactividad</string>
+    <string name="prefSummaryIdleTimeoutV2">Se cerrarán las conexiones sin actividad tras un tiempo, en segundos. Establecer en 0 para desactivar.</string>
+    <string name="prefTitleLogging">Registro</string>
+    <string name="prefSummaryLoggingV2">El registro sirve para analizar errores. Si la aplicación no funciona correctamente, puede enviar el registro a los desarrolladores. Puede requerir reiniciar de la aplicación. Los registros se guardan en %s.</string>
+    <string name="prefAllowedIpsPattern">Patrón de IPs permitidas</string>
+    <string name="prefSummaryAllowedIpsPattern">Defina mediante un patrón las IPs que pueden conectarse al servidor. Solo se puede usar un caracter comodín (*), y ha de ser el último.</string>
+    <string name="prefTitleQuickSettingsRequiresUnlock">Desbloqueo para configurar</string>
+    <string name="prefSummaryQuickSettingsRequiresUnlock">Si activa la opción, tocar el recuadro de configuración rápida exigirá desbloquear el dispositivo para encender o apagar el servidor.</string>
+    <string name="prefRootCopyFiles">Root: usar carpeta temporal</string>
+    <string name="prefSummaryRootCopyFiles">Acceder a archivos con «dd» puede dar problemas en algunos dispositivos. Con esta opción, se copian primero en la carpeta «tmp» y, después, se accede mediante el sistema de archivos. Se aconseja no activarla si ha de transmitir archivos grandes.</string>
+    <string name="licence">Licencia</string>
+    <string name="reset">Restaurar</string>
+    <string name="widgetTextStart">iniciar (s)ftpd</string>
+    <string name="widgetTextStop">detener (s)ftpd</string>
+    <string name="isAnonymous">Usuario anónimo: %1$b</string>
+    <string name="passwordPresent">Contraseña: %1$b</string>
+    <string name="pubKeyAuth">Acceso con clave pública: %1$b</string>
+    <string name="selectServerAction">Escoja acción del servidor</string>
+    <string name="isServerRunning">¿Se está ejecutando el servidor?</string>
+    <string name="storageType">Tipo de almacenamiento</string>
+    <string name="storageTypePlainV2">Sistema de archivos\n¿Acceso solo de lectura? Vea <a href="https://www.github.com/wolpi/prim-ftpd/">página GitHub</a>.</string>
+    <string name="storageTypeRoot">Superusuario («root» debe ser accesible)</string>
+    <string name="storageTypeSaf">Marco de acceso al almacenamiento de Android (SAF)\n(por ejemplo, para tarjeta SD externa)</string>
+    <string name="storageTypeRoSaf">SAF de solo lectura (¡más rápido!)</string>
+    <string name="storageTypeVirtual">Carpetas virtuales (admite todos los tipos)</string>
+    <string name="safExplainHeading">Funcionamiento de SAF</string>
+    <string name="selectedSafUri">URI escogida para SAF:</string>
+    <string name="downloadOrSaveUrlToFile">¿Descargar o guardar la dirección URL en un archivo de texto?</string>
+    <string name="download">Descargar</string>
+    <string name="saveToTextFile">Guardar</string>
+    <string name="filepickerCreateFolderError">No se pudo crear la carpeta</string>
+    <string name="filepickerNewFolder">Nueva carpeta</string>
+    <string name="filepickerNewFolderOk">\@android:string/ok</string>
+    <string name="filepickerNewFolderCancel">\@android:string/cancel</string>
+    <string name="filepickerListOk">\@android:string/ok</string>
+    <string name="filepickerListCancel">\@android:string/cancel</string>
+    <string name="filepickerName">Nombre</string>
+    <string name="filepickerFilename">Nombre del archivo</string>
+    <string name="filepickerSelectSomethingFirst">Debe seleccionar algo primero</string>
+    <string name="quickShare">Envío rápido</string>
+    <string name="quickShareServerStarted">Se ha iniciado el servidor enviando un solo archivo</string>
+    <string name="quickShareInfoNotificationV2">Envío rápido con %1d archivo(s)</string>
+    <string name="quickShareInfoActivityV2">Modo de envío rápido para %1d archivo(s)</string>
+    <string name="clientActionsLabel">Registro de acciones del cliente</string>
+    <string name="statsLabel">Métricas</string>
+    <string name="statsTotalSent">Total enviado</string>
+    <string name="statsTotalReceived">Total recibido</string>
+    <string name="statsSentPerSec">Enviado por segundo</string>
+    <string name="statsReceivedPerSec">Recibido por segundo</string>
+    <string name="hasFullAccessToStorage">Acceso total a almacenamiento: %1$b</string>
+    <string name="hasNormalAccessToStorage">Acceso (normal) almacenamiento: %1$b</string>
+    <string name="hasAccessToMediaLocation">Acceso a datos de posición (geodatos): %1$b</string>
+    <string name="Request">Cambiar</string>
+    <string name="quickShareFiles">Envío rápido de archivos:</string>
+    <string name="logFiles">Archivos de registro:</string>
+    <string name="rootTmpFiles">Archivos temporales de acceso con «root»:</string>
+    <string name="delete">Eliminar</string>
+    <string name="mobileUiShort">Modo móvil</string>
+    <string name="mobileUiLong">Modo dispositivo móvil</string>
+    <string name="tvUiShort">Modo TV</string>
+    <string name="tvUiLong">Modo televisión</string>
+    <string name="iconKeysFingerprints">Huellas de claves</string>
+    <string name="iconCleanSpace">Liberar espacio</string>
+    <string name="iconAbout">Acerca de</string>
+    <string-array name="prefWhichServerToStartNames">
+        <item>FTP y SFTP</item>
+        <item>Solo FTP</item>
+        <item>Solo SFTP</item>
+    </string-array>
+    <string-array name="prefWhichServerToStartValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="prefLoggingNames">
+        <item>No hacer registro</item>
+        <item>Registrar en archivo de texto</item>
+        <item>Registrar en Android</item>
+    </string-array>
+    <string-array name="prefLoggingValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string name="hasNotificationPermission">Tiene permiso para mostrar notificaciones: %1$b</string>
+    <string name="qrFallback">ni interfaces de red, ni direcciones IP, ni código QR</string>
+    <string name="prefShowTabNames">Mostrar los nombres de las pestañas</string>
+    <string name="prefSummaryShowTabNames">Mostrar nombres en las pestañas de la interfaz de usuario principal</string>
+    <string name="prefTitleIdleTimeoutServerStop">Tiempo de espera para detener el servidor</string>
+    <string name="prefSummaryIdleTimeoutServerStop">Los servidores se detendrán después de este tiempo en minutos si no hay actividad de clientes. Establecer en 0 para desactivar.</string>
+    <string name="noKeysPresent">No hay claves.</string>
+    <string name="prefSummaryHostkeyAlgos">El algoritmo con que generar las claves pública y privada del servidor SFTP</string>
+    <string name="add">Añadir</string>
+    <string name="pubkeyInvalid">La entrada no es una clave válida, se ha ignorado.</string>
+    <string name="prefHostkeyAlgos">Algoritmos SFTP Hostkey</string>
+    <string name="pubkeyAuthKeysHeading">Claves para la autenticación de clave pública</string>
+    <string name="addPubkeyForAuth">Agregar clave pública para la autenticación</string>
+    <string name="safExplainV2">Android le pedirá que elija una carpeta. Ésta estará disponible a través de uno o más servidores. ¿Se revoca el permiso y tiene que volver a seleccionarlo periódicamente? Consulte nuestra <a href="https://www.github.com/wolpi/prim-ftpd/">página de GitHub</a>.</string>
+    <string name="usernameLabel">Nombre de usuario: %s</string>
+</resources>

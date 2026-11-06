@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content">
+    <!--
+        <include layout="@layout/block_stats"  />
+    -->
+    <!-- logs label -->
+    <TextView
+        android:id="@+id/clientActionsLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"
+        android:text="@string/clientActionsLabel"
+        />
+
+    <!-- logs scroll view -->
+    <ScrollView
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/clientActionsScrollView"
+        android:layout_marginBottom="8dp">
+
+        <!-- content -->
+        <TextView
+            android:id="@+id/clientActionsContent"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textIsSelectable="true"
+            />
+
+    </ScrollView>
+</LinearLayout>

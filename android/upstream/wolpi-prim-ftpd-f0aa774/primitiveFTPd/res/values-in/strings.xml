@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">primitive ftpd</string>
+    <string name="ifacesLabel">Antarmuka Jaringan</string>
+    <string name="ipAddrLabel">Alamat IP</string>
+    <string name="ifacesError">Galat:</string>
+    <string name="protocolLabel">Protokol</string>
+    <string name="portLabel">Porta</string>
+    <string name="fingerprintsLabel">Sidik Jari Kunci</string>
+    <string name="generateKeysMessage">Buat Kunci?</string>
+    <string name="generatingKeysMessage">Membuat Kunci …</string>
+    <string name="generate">Buat</string>
+    <string name="cancel">Batal</string>
+    <string name="state">Status</string>
+    <string name="serverStarted">Berjalan …</string>
+    <string name="serverStopped">Berhenti</string>
+    <string name="permissionRequired">Apl membutuhkan izin \"%1$s\" agar bisa bekerja!</string>
+    <string name="permissionNameStorage">Penyimpanan</string>
+    <string name="quickSettingsServerStarted">pFTPd Berjalan …</string>
+    <string name="quickSettingsServerStopped">pFTPd Berhenti</string>
+    <string name="saveAs">Simpan sebagai</string>
+    <string name="startService">Mulai Server</string>
+    <string name="stopService">Setop Server</string>
+    <string name="toggleService">Mulai/Setop Server</string>
+    <string name="notificationTitle">Server FTP</string>
+    <string name="haveToSetAuthMechanism">Anda harus menyiapkan mekanisme otentikasi terlebih dahulu</string>
+    <string name="serverRunning">Server FTP sedang berjalan</string>
+    <string name="serverCouldNotBeStarted">Server tidak bisa dimulai! Pesan galat:</string>
+    <string name="portInvalid_v2">Porta tidak valid. Harus antara 1024 dan 64000.</string>
+    <string name="portsEqual_v2">Porta sama. Ini tidak akan bisa bekerja.</string>
+    <string name="restartServer">Mulai ulang server agar perubahan yang Anda buat dapat diterapkan.</string>
+    <string name="couldNotReadKeyAuthKey">Kunci publik untuk otentikasi kunci tidak bisa dibaca. Silakan periksa log.</string>
+    <string name="ftpPassivePortsInvalid">Nilai dari Porta FTP Pasif tidak valid.</string>
+    <string name="prefs">Preferensi</string>
+    <string name="prefsCategoryTitleAuth">Otentikasi</string>
+    <string name="prefsCategoryTitleConnectivity">Konektivitas</string>
+    <string name="prefsCategoryTitleUi">UI</string>
+    <string name="prefsCategoryTitleSystem">Sistem</string>
+    <string name="prefTitleUser">Nama pengguna</string>
+    <string name="prefSummaryUser">Nama pengguna server-FTP</string>
+    <string name="prefTitlePassword">Sandi</string>
+    <string name="prefSummaryPassword">Sandi server FTP</string>
+    <string name="prefTitlePort">Porta</string>
+    <string name="prefSummaryPort">Porta server FTP</string>
+    <string name="prefTitlePortSecure">Porta Aman</string>
+    <string name="prefSummaryPortSecure">Porta server FTP (dienkripsi)</string>
+    <string name="prefTitleStartDir">Direktori Awal Server</string>
+    <string name="prefSummaryStartDir">Direktori pertama setelah masuk</string>
+    <string name="prefTitleAnnounce">Umumkan server di LAN</string>
+    <string name="prefSummaryAnnounce">Umumkan server FTP di LAN via DNS-CD (Bonjour). Bisa mengakibatkan crash pada beberapa perangkat.</string>
+    <string name="prefTitleAnnounceName">Nama Server</string>
+    <string name="prefSummaryAnnounceName">Nama yang akan diumumkan di LAN.</string>
+    <string name="prefTitleWakelock">Cegah Standby</string>
+    <string name="prefSummaryWakelock">Mencegah Standby saat server sedang berjalan. Standby can cause uploads/downloads to abort.</string>
+    <string name="prefTitleWhichServerToStart">Server yang akan dijalankan</string>
+    <string name="prefSummaryWhichServerToStart">Pilih server yang akan dijalankan, hanya server FTP, hanya server SFTP atau keduanya.</string>
+    <string name="prefTitleStartOnBoot">Mulai saat boot</string>
+    <string name="prefSummaryStartOnBoot">Mulai server saat sistem perangkat dinyalakan.</string>
+    <string name="prefTitleStartOnOpen">Mulai saat membuka</string>
+    <string name="prefSummaryStartOnOpen">Mulai server saat aplikasi dibuka.</string>
+    <string name="prefTitleShowConnectionInfoInNotification">Tampilkan info koneksi di notifikasi</string>
+    <string name="prefSummaryShowConnectionInfoInNotification">Menampilkan info koneksi seperti alamat IP di notifikasi.</string>
+    <string name="prefTitleSshowIpv4InNotification">Tampilkan alamat IPv4 di notifikasi</string>
+    <string name="prefSummaryShowIpv4InNotification">Tampilkan alamat IPv4 di notifikasi jika info koneksi diaktifkan.</string>
+    <string name="prefTitleSshowIpv6InNotification">Tampilkan alamat IPv6 di notifikasi</string>
+    <string name="prefSummaryShowIpv6InNotification">Menampilkan alamat IPv6 di notifikasi jika info koneksi diaktifkan.</string>
+    <string name="prefTitleShowStartStopNotification">Tampilkan notifikasi untuk mulai/setop server</string>
+    <string name="prefSummaryShowStartStopNotification">Selalu menampilkan notifikasi untuk mempercepat proses mulai/setop server.</string>
+    <string name="prefTitlePubKeyAuth">Otentikasi Kunci Publik</string>
+    <string name="prefTitleAnonymousLogin">Masuk Anonim</string>
+    <string name="prefSummaryAnonymousLogin">Mengatur apakah proses masuk secara anonim diizinkan pada server.</string>
+    <string name="prefTitleFtpPassivePorts">Porta FTP Pasif</string>
+    <string name="prefSummaryFtpPassivePorts">Porta untuk koneksi data FTP Pasif. Boleh porta tunggal, beberapa atau rentang porta. Mis. 5678,5700-5710,5800,5900.</string>
+    <string name="prefTitleIdleTimeout">Batas Waktu Menganggur Server</string>
+    <string name="prefTitleLogging">Log</string>
+    <string name="prefSummaryLoggingV2">Log disediakan untuk analisa galat. Jika apl tidak bekerja sebagaimana mestinya pada perangkat Anda, Anda bisa mengirim log ke pengembang. Mungkin membutuhkan apl untuk dimulai ulang. Teks Log disimpan di %s.</string>
+    <string name="prefAllowedIpsPattern">&gt;Pola IP yang diizinkan</string>
+    <string name="prefSummaryAllowedIpsPattern">Pola alamat IP yang diizinkan. Hanya satu Wildcard (*) yang boleh digunakan, hanya sebagai karakter terakhir.</string>
+    <string name="licence">Lisensi</string>
+    <string name="reset">Atur Ulang</string>
+    <string name="widgetTextStart">mulai (s)ftpd</string>
+    <string name="widgetTextStop">setop (s)ftpd</string>
+    <string name="isAnonymous">Masuk anonim: %1$b</string>
+    <string name="passwordPresent">Menggunakan sandi: %1$b</string>
+    <string name="pubKeyAuth">Otentikasi kunci publik: %1$b</string>
+    <string name="selectServerAction">Pilih Tindakan Server</string>
+    <string name="isServerRunning">Apakah server sedang berjalan?</string>
+    <string name="storageType">Tipe Penyimpanan</string>
+    <string name="storageTypeRoot">Pengguna super (perangkat harus diroot)</string>
+    <string name="storageTypeSaf">Storage Access Framework (SAF) Android\n(mis. untuk kartu sd)</string>
+    <string name="storageTypeRoSaf">SAF baca saja (lebih cepat !)</string>
+    <string name="safExplainHeading">Bagaimana SAF bekerja</string>
+    <string name="selectedSafUri">URI SAF yang dipilih:</string>
+    <string name="filepickerCreateFolderError">Gagal membuat folder baru</string>
+    <string name="filepickerNewFolder">Folder baru</string>
+    <string name="filepickerNewFolderOk">\@android:string/ok</string>
+    <string name="filepickerNewFolderCancel">\@android:string/cancel</string>
+    <string name="filepickerListOk">\@android:string/ok</string>
+    <string name="filepickerListCancel">\@android:string/cancel</string>
+    <string name="filepickerName">Nama</string>
+    <string name="filepickerFilename">Nama berkas</string>
+    <string name="filepickerSelectSomethingFirst">Silakan pilih apa saja terlebih dahulu</string>
+    <string-array name="prefWhichServerToStartNames">
+        <item>FTP dan SFTP</item>
+        <item>Hanya FTP</item>
+        <item>Hanya SFTP</item>
+    </string-array>
+    <string-array name="prefWhichServerToStartValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="prefLoggingNames">
+        <item>Tanpa Log</item>
+        <item>Log ke Textfile</item>
+        <item>Log ke Android</item>
+    </string-array>
+    <string-array name="prefLoggingValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string name="saveToTextFile">Simpan ke berkas teks</string>
+    <string name="download">Unduh</string>
+    <string name="downloadOrSaveUrlToFile">Unduh atau simpan URL ke berkas teks ?</string>
+    <string name="quickShareServerStarted">Server telah mulai membagikan berkas tunggal</string>
+    <string name="quickShare">Berbagi Cepat</string>
+    <string name="prefSummaryIdleTimeoutV2">Server akan menghentikan koneksi yang tidak aktif setelah ini dalam hitungan detik. Setel ke 0 untuk menonaktifkan.</string>
+    <string name="prefSummaryQuickSettingsRequiresUnlock">Klik pada ikon pengaturan cepat membutuhkan perangkat tidak terkunci untuk memulai/meyetop server. Ketika diaktifkan, akan meminta konfirmasi untuk membuka perangkat jika terkunci.</string>
+    <string name="prefTitleQuickSettingsRequiresUnlock">Syarat buka kunci Ikon Pengaturan Cepat</string>
+    <string name="statsReceivedPerSec">Diterima per detik</string>
+    <string name="statsSentPerSec">Terkirim per detik</string>
+    <string name="statsTotalReceived">Total Diterima</string>
+    <string name="statsTotalSent">Total Terkirim</string>
+    <string name="statsLabel">Stat</string>
+    <string name="quickShareInfoNotification">Berbagi Cepat: %1s</string>
+    <string name="quickShareInfoActivity">Berjalan dalam Mode Berbagi Cepat untuk berkas: %1s</string>
+    <string name="allKeysFingerprintsLabel">Tampilkan sidik jari dari semua tombol</string>
+    <string name="pubkeyAuthKeysHeading">Kunci untuk autentikasi kunci publik</string>
+    <string name="addPubkeyForAuth">Tambahkan kunci publik untuk auth</string>
+    <string name="pubkeyInvalid">Ini bukan kunci yang valid, telah diabaikan.</string>
+    <string name="noKeysPresent">Tidak ada kunci.</string>
+    <string name="prefShowTabNames">Tampilkan nama tab</string>
+    <string name="prefBindIp">IP untuk mengikat</string>
+    <string name="prefSummaryBindIp">Jika Anda ingin server mendengarkan pada satu antarmuka saja.</string>
+    <string name="prefSummaryShowTabNames">Tampilkan nama pada tab di UI utama</string>
+    <string name="prefSummaryPubKeyAuth_v2">Jika diaktifkan, letakkan kunci publik ssh2 Anda di %s. Ini harus berupa berkas yang berisi satu kunci per baris. Hanya SFTP.</string>
+    <string name="prefTitleIdleTimeoutServerStop">Batas waktu idle untuk menghentikan server</string>
+</resources>

@@ -1,0 +1,122 @@
+package org.primftpd.events;
+
+import org.primftpd.prefs.StorageType;
+import org.primftpd.services.PftpdService;
+
+import java.util.Date;
+
+import androidx.annotation.NonNull;
+
+public class ClientActionEvent {
+    public enum Storage {
+        FS,
+        ROOT,
+        SAF,
+        ROSAF,
+        QUICKSHARE,
+        VIRTUAL
+    }
+
+    public enum Protocol {
+        FTP,
+        SFTP
+    }
+
+    public enum ClientAction {
+        LIST_DIR,
+        CREATE_DIR,
+        RENAME,
+        DELETE,
+        DOWNLOAD,
+        UPLOAD,
+        CONNECT,
+        ERROR,
+    }
+
+    public static Storage getStorage(PftpdService service) {
+        StorageType storageType = service.getPrefsBean().getStorageType();
+        switch (storageType) {
+            case PLAIN:
+                return Storage.FS;
+            case ROOT:
+                return Storage.ROOT;
+            case SAF:
+                return Storage.SAF;
+            case RO_SAF:
+                return Storage.ROSAF;
+            case VIRTUAL:
+                return Storage.VIRTUAL;
+        }
+        return Storage.VIRTUAL;
+    }
+
+    private final Storage storage;
+    private final Protocol protocol;
+    private final ClientAction clientAction;
+    private final Date timestamp;
+    private final String clientIp;
+    private final String path;
+
+    private final String error;
+
+    public ClientActionEvent(
+            Storage storage,
+            Protocol protocol,
+            ClientAction clientAction,
+            Date timestamp,
+            String clientIp,
+            String path,
+            String error) {
+        this.storage = storage;
+        this.protocol = protocol;
+        this.clientAction = clientAction;
+        this.timestamp = timestamp;
+        this.clientIp = clientIp;
+        this.path = path;
+        this.error = error;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        String str = "ClientActionEvent{" +
+                "storage=" + storage +
+                ", protocol=" + protocol +
+                ", timestamp=" + timestamp +
+                ", clientIp='" + clientIp + '\'' +
+                ", clientAction=" + clientAction +
+                ", path='" + path + '\'';
+        if (error != null) {
+            str = str + ", error=" + error;
+        }
+        return str + '}';
+    }
+
+    public Storage getStorage() {
+        return storage;
+    }
+
+    public Protocol getProtocol() {
+        return protocol;
+    }
+
+    public ClientAction getClientAction() {
+        return clientAction;
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public String getClientIp() {
+        return clientIp;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public String getError() {
+        return error;
+    }
+}

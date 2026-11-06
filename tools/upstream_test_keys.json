@@ -1,0 +1,17 @@
+{
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/authorized_keys": "7a0894b48d2e39858cccbb85aa0612839c6a8cd42fdec701284125bb5bdd3323",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/ecdsa.key": "e6fedb41816efacb0ebd6f70a57b8a69a58c0de32d494c69857ef8eecf7dd5fa",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/ecdsa.key.384": "bdb70bd3926c90953ae7ffcbba5744ebf237a3f9e50166129fd178ad01d6c6b2",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/ecdsa.key.521": "07e26734beb84b17a97fe15600bea44b718978cdc97efdfdac2815ef646626c7",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/ecdsa.key.pub": "258a8dd2dee68a6f621e9d5b57c1e9309f07bb9899a00d60250b534cd08c2cbf",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/ecdsa.key.pub.384": "9d140f04bf0cd62b2191156d5e7c57150a40b051c7dcf470e2be30b0d22146f6",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/ecdsa.key.pub.521": "2a90f881cd72993109faf9fe4f8038bbbe47645221ace6cf36ae37aa7a098371",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/ed25519.bad.key": "bcaf298245e441a2a3d124ab884a19098cda109b0689fd2434a0f407cd91fca4",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/ed25519.bad.key.pub": "7e7d99ee7822c243e269494df3973a3f7b1c273214379b346fc302e2f11ec1cd",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/ed25519.key": "b0c7f631f09690b496645269a78bd7b51a1cbb233469116ca9295abdb6ef5cb3",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/ed25519.key.pub": "f42b057cdaf273ccf5fc259bd34057742d939307408ff7ac5d7bc2f95527cc1e",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/rsa.bad.key": "9a01a540fe10bc28565bf34762cb6e59f6cde437514f7446dbb0f4a181a7e6ac",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/rsa.bad.key.pub": "d6d2a264f1d01e99ccc22c1b53498cd98412049421450fe8e9a895203a320e1b",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/rsa.key": "6ee769f091e60745893cc44d794393228b3ee1a646303cf964a6e009afcb400c",
+  "android/upstream/wolpi-prim-ftpd-f0aa774/pftpd-pojo-lib/src/test/resources/keys/rsa.key.pub": "37a7c56f6ffe6427b4ac701c11f1be314c7258efa034f84c954e0476f7fd4759"
+}

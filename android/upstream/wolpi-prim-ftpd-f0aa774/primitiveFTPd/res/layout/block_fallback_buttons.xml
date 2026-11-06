@@ -1,0 +1,29 @@
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- fallback buttons container (e.g. for leanback) -->
+    <LinearLayout
+        android:id="@+id/fallbackButtonsContainer"
+        android:visibility="visible"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        style="?android:attr/buttonBarStyle">
+
+        <Button
+            android:id="@+id/fallbackButtonToggleServer"
+            android:gravity="center_horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:nextFocusForward="@+id/radioStoragePlain"
+            android:nextFocusDown="@+id/radioStoragePlain"
+            android:nextFocusRight="@+id/keyFingerprintsLabel"
+            android:nextFocusUp="@+id/allKeysFingerprintsLabel"
+            android:nextFocusLeft="@+id/allKeysFingerprintsLabel"
+            android:text="@string/startService"
+            android:focusedByDefault="true"
+            />
+
+    </LinearLayout>
+
+</merge>

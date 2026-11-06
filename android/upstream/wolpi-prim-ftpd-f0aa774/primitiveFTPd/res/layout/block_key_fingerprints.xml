@@ -1,0 +1,102 @@
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- key fingerprints -->
+    <TextView
+        android:id="@+id/keyFingerprintsLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"
+        android:text="@string/fingerprintsLabel"
+        app:drawableRightCompat="?attr/iconRefresh"
+        android:drawablePadding="4dp"
+        android:focusable="true"
+        android:background="@drawable/label_custom"
+        android:nextFocusLeft="@+id/radioStorageVirtual"
+        android:nextFocusUp="@+id/radioStorageVirtual"
+        android:nextFocusRight="@+id/allKeysFingerprintsLabel"
+        android:nextFocusDown="@+id/allKeysFingerprintsLabel"
+        android:nextFocusForward="@+id/allKeysFingerprintsLabel"
+        />
+
+    <!-- all keys fingerprints -->
+    <TextView
+        android:id="@+id/allKeysFingerprintsLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/allKeysFingerprintsLabel"
+        android:drawablePadding="4dp"
+        android:textColor="@color/blueIcon"
+        android:background="@drawable/label_custom"
+        android:nextFocusLeft="@+id/keyFingerprintsLabel"
+        android:nextFocusUp="@+id/keyFingerprintsLabel"
+        android:nextFocusDown="@+id/fallbackButtonToggleServer"
+        android:nextFocusRight="@+id/qrUrlsParent"
+        android:nextFocusForward="@+id/qrUrlsParent"
+        />
+
+    <!-- MD 5 -->
+    <TextView
+        android:id="@+id/keyFingerprintMd5Label"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:focusable="false"
+        />
+    <TextView
+        android:id="@+id/keyFingerprintMd5TextView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:typeface="monospace"
+        android:textIsSelectable="true"
+        android:selectAllOnFocus="true"
+        android:focusable="false"
+        />
+    <!-- SHA 1 -->
+    <TextView
+        android:id="@+id/keyFingerprintSha1Label"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:focusable="false"
+        />
+    <TextView
+        android:id="@+id/keyFingerprintSha1TextView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:typeface="monospace"
+        android:textIsSelectable="true"
+        android:selectAllOnFocus="true"
+        android:focusable="false"
+        />
+    <!-- SHA 256 -->
+    <TextView
+        android:id="@+id/keyFingerprintSha256Label"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:focusable="false"
+        />
+    <TextView
+        android:id="@+id/keyFingerprintSha256TextView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:typeface="monospace"
+        android:textIsSelectable="true"
+        android:selectAllOnFocus="true"
+        android:focusable="false"
+        android:layout_marginBottom="8dp"
+        />
+
+</merge>

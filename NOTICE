@@ -1,0 +1,11 @@
+LC Transfer
+Copyright 2026 LC Transfer contributors
+
+The Android client is derived from Primitive FTPd 8.2 by wolpi and contributors.
+Upstream: https://github.com/wolpi/prim-ftpd/tree/prim-ftpd-8.2
+Copyright 2012 primFTPd Team. Apache License, Version 2.0.
+
+This distribution includes modified Android application and SSHD sources.
+See android/MODIFICATIONS.md for the changes. Existing third-party copyright
+and license notices in the source tree remain applicable. Desktop dependencies
+have their own licenses; see THIRD_PARTY_NOTICES.md.

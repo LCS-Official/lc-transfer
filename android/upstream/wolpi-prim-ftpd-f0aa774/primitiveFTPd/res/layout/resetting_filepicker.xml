@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="org.primftpd.filepicker.ResettingFilePickerActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/filepicker_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?filepickerToolbarTheme"
+        >
+
+        <TextView
+            android:id="@+id/filepicker_current_dir"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:ellipsize="start"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+            />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:layout_marginEnd="2dp"
+            android:layout_marginRight="2dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:id="@+id/filepicker_title_edit"
+            android:src="@android:drawable/ic_menu_edit"
+            />
+    </androidx.appcompat.widget.Toolbar>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/filepicker_buttons_container"
+        android:layout_below="@+id/filepicker_toolbar"
+        android:descendantFocusability="afterDescendants"
+        android:focusable="true"
+        tools:listitem="@layout/filepicker_listitem_dir"/>
+
+    <FrameLayout
+        android:id="@+id/filepicker_buttons_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <LinearLayout
+            android:id="@+id/filepicker_button_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/filepicker_button_cancel"
+                style="?attr/borderlessButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="@android:string/cancel"/>
+
+            <Button
+                android:id="@+id/button_reset"
+                style="?attr/borderlessButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="@string/reset"/>
+
+            <Button
+                android:id="@+id/filepicker_button_ok"
+                style="?attr/borderlessButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="@android:string/ok"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/filepicker_newfile_button_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/filepicker_text_filename"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:hint="@string/filepickerFilename"
+                android:maxLines="1"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"/>
+
+            <ImageButton
+                android:id="@+id/filepicker_button_ok_newfile"
+                style="?attr/borderlessButtonStyle"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:hint="@android:string/ok"
+                app:srcCompat="@drawable/filepicker_ic_save_black_24dp"
+                android:tint="?attr/filepickerSaveIconColor"/>
+
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_above="@id/filepicker_buttons_container"
+        android:background="?filepickerSeparatorColor"/>
+</RelativeLayout>
