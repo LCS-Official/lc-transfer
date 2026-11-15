@@ -20,7 +20,7 @@ if getattr(sys, 'frozen', False) and '--smoke-test' in sys.argv:
     faulthandler.dump_traceback_later(15, file=_smoke_log)
 
 import paramiko
-from PySide6.QtCore import QObject, QRunnable, QSize, Qt, QThreadPool, QTimer, QUrl, Signal
+from PySide6.QtCore import QEvent, QObject, QRunnable, QSize, Qt, QThreadPool, QTimer, QUrl, Signal
 from PySide6.QtGui import QColor, QDesktopServices, QFont, QFontDatabase, QIcon, QImageReader, QPainter, QPixmap
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
     QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QFrame, QHBoxLayout, QLabel,
@@ -457,11 +457,12 @@ class Window(QMainWindow):
         self.all_button.clicked.connect(self.select_all)
         controls.addWidget(self.all_button)
         clear = QPushButton('取消选择')
-        clear.clicked.connect(lambda: [g.clearSelection() for g in self.galleries])
+        clear.clicked.connect(self.clear_selection)
         controls.addWidget(clear)
         main.addLayout(controls)
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        self.scroll.viewport().installEventFilter(self)
         self.scroll.setToolTip('拖入电脑上的文件或文件夹，松开即可上传到手机接收目录。')
         self.scroll.verticalScrollBar().valueChanged.connect(self.maybe_load_more)
         self.scroll.verticalScrollBar().rangeChanged.connect(
@@ -701,6 +702,19 @@ class Window(QMainWindow):
         self.download_button.setEnabled(self.connected and not self.busy and bool(selected))
         self.delete_button.setEnabled(self.connected and not self.busy and bool(selected)
                                       and not any(e.is_dir for e in selected))
+
+    def clear_selection(self):
+        for gallery in self.galleries:
+            gallery.clearSelection()
+
+    def eventFilter(self, watched, event):
+        if (event.type() == QEvent.Type.MouseButtonPress
+                and event.button() == Qt.MouseButton.LeftButton
+                and not event.modifiers() & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier)):
+            gallery = watched.parent()
+            if not isinstance(gallery, Gallery) or gallery.itemAt(event.position().toPoint()) is None:
+                self.clear_selection()
+        return super().eventFilter(watched, event)
 
     def select_all(self):
         for gallery in self.galleries:
@@ -1039,6 +1053,7 @@ class Window(QMainWindow):
 
     def gallery_batch(self, entries):
         batch = QWidget()
+        batch.installEventFilter(self)
         layout = QVBoxLayout(batch)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -1051,8 +1066,10 @@ class Window(QMainWindow):
             count = f'{len(items)} 项' if self.category != 'files' else f'本页 {len(items)} 项'
             label = QLabel(f'{title}    ·    {count}')
             label.setObjectName('date')
+            label.installEventFilter(self)
             layout.addWidget(label)
             gallery = Gallery(items, self.icons)
+            gallery.viewport().installEventFilter(self)
             gallery.itemSelectionChanged.connect(self.selection_changed)
             gallery.itemDoubleClicked.connect(self.activate)
             gallery.setMinimumWidth(180)
@@ -1105,6 +1122,7 @@ class Window(QMainWindow):
         self.batch_loading = False
         content = QWidget()
         content.setObjectName('galleryContent')
+        content.installEventFilter(self)
         content.setStyleSheet('QWidget#galleryContent { background: white; }')
         layout = QVBoxLayout(content)
         layout.setContentsMargins(14, 6, 14, 14)
