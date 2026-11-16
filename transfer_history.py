@@ -82,10 +82,12 @@ class History:
             item.update(event)
             self.save()
 
-    def finish(self, job_id, state, error='', archive=''):
+    def finish(self, job_id, state, error='', archive='', *, target=None):
         with self.lock:
             job = next(j for j in self.data['jobs'] if j['id'] == job_id)
             job.update(state=state, error=error, archive=archive, finished=time.time())
+            if target is not None:
+                job['target'] = target
             for item in job['files']:
                 if state == 'done' and item['state'] == 'packed':
                     item['state'] = 'done'

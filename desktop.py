@@ -240,7 +240,7 @@ class TransferDialog(QDialog):
         self.resize(1000, 620)
         self.setMinimumSize(700, 430)
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel('单个文件直接保存；多选或文件夹打包 ZIP。展开任务可查看每个文件的进度。'))
+        layout.addWidget(QLabel('默认按原格式保存，多选放入独立文件夹；勾选“保存为 ZIP”可打包。展开任务查看文件进度。'))
         self.tree = QTreeWidget()
         self.tree.setHeaderLabels(['文件 / 任务', '方向', '状态', '进度', '接收位置 / 错误'])
         self.tree.setColumnWidth(0, 290)
@@ -399,8 +399,10 @@ class Window(QMainWindow):
         self.folder_button.clicked.connect(self.upload_folder)
         self.download_button = QPushButton('↓  传输到电脑')
         self.download_button.setObjectName('primary')
-        self.download_button.setToolTip('单个文件直接下载；多选文件或文件夹打包 ZIP。')
+        self.download_button.setToolTip('单个文件直接保存；多选保存到独立文件夹。勾选旁边的选项可保存为 ZIP。')
         self.download_button.clicked.connect(self.download_selected)
+        self.save_zip = QCheckBox('保存为 ZIP')
+        self.save_zip.setToolTip('默认不勾选：单文件直接保存，多选或文件夹保存到独立文件夹；勾选后打包为 ZIP。')
         self.refresh_button = QPushButton('刷新')
         self.refresh_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload))
         self.refresh_button.clicked.connect(self.refresh)
@@ -408,7 +410,7 @@ class Window(QMainWindow):
         self.delete_button.setObjectName('danger')
         self.delete_button.setToolTip('永久删除选中的手机文件；不删除文件夹。')
         self.delete_button.clicked.connect(self.delete_selected)
-        for button in [self.folder_button, self.download_button, self.refresh_button, self.delete_button]:
+        for button in [self.folder_button, self.download_button, self.save_zip, self.refresh_button, self.delete_button]:
             top.addWidget(button)
         top.addStretch()
         transfers_button = QPushButton('传输')
@@ -673,7 +675,7 @@ class Window(QMainWindow):
 
     def update_controls(self):
         available = self.connected and not self.busy
-        for w in [self.folder_button, self.refresh_button, self.all_button, self.search, self.sort, *self.nav.values()]:
+        for w in [self.folder_button, self.save_zip, self.refresh_button, self.all_button, self.search, self.sort, *self.nav.values()]:
             w.setEnabled(available)
         for w in self.path_row_widgets:
             w.setEnabled(available and self.category == 'files')
@@ -1350,6 +1352,9 @@ class Window(QMainWindow):
                     return
                 target = target.strip()
         receiver = self.settings.download_dir
+        save_zip = direction == 'download' and not share_request and self.save_zip.isChecked()
+        grouped = (direction == 'download' and not share_request and not save_zip
+                   and (len(entries) > 1 or entries[0].is_dir))
         names = [e.name if isinstance(e, Entry) else Path(e).name for e in entries]
         job_id = self.history.start(direction, names, target if direction == 'upload' else receiver,
                                     self.settings.host, self.settings.fingerprint,
@@ -1381,7 +1386,7 @@ class Window(QMainWindow):
                 nonlocal destination
                 last_event.update(data)
                 self.history.event(job_id, data)
-                if direction == 'download' and data['state'] == 'done':
+                if direction == 'download' and not grouped and data['state'] == 'done':
                     destination = data['target']
                 if phone is not None and time.monotonic() - last_mirror[0] > 2:
                     last_mirror[0] = time.monotonic()
@@ -1392,16 +1397,24 @@ class Window(QMainWindow):
                     self.history.mirror(phone)
                     try:
                         if direction == 'download':
-                            if share_request or (len(entries) == 1 and not entries[0].is_dir):
-                                count, archive = phone.download(entries, Path(receiver), report), ''
-                            else:
+                            if save_zip:
                                 count, archive = phone.download_zip(entries, Path(receiver), report)
                                 destination = archive
+                            else:
+                                if grouped:
+                                    phone.check_cancel()
+                                    Path(receiver).mkdir(parents=True, exist_ok=True)
+                                    destination = tempfile.mkdtemp(
+                                        prefix=time.strftime('手机文件_%Y%m%d_%H%M%S_'),
+                                        dir=Path(receiver).resolve())
+                                count, archive = phone.download(
+                                    entries, Path(destination if grouped else receiver), report), ''
                         else:
                             count, archive = phone.upload(entries, target, report), ''
-                        self.history.finish(job_id, 'done', archive=archive)
+                        self.history.finish(job_id, 'done', archive=archive, target=destination if grouped else None)
                     except Exception as ex:
-                        self.history.finish(job_id, 'cancelled' if isinstance(ex, Cancelled) else 'error', str(ex) or type(ex).__name__)
+                        self.history.finish(job_id, 'cancelled' if isinstance(ex, Cancelled) else 'error',
+                                            str(ex) or type(ex).__name__, target=destination if grouped else None)
                         raise
                     finally:
                         self.history.mirror(phone)
@@ -1412,7 +1425,7 @@ class Window(QMainWindow):
                                 logging.warning('share acknowledgement deferred: %s', error)
             except Exception as ex:
                 state = 'cancelled' if isinstance(ex, Cancelled) else 'error'
-                self.history.finish(job_id, state, str(ex) or type(ex).__name__)
+                self.history.finish(job_id, state, str(ex) or type(ex).__name__, target=destination if grouped else None)
                 logging.exception('transfer failed job=%s direction=%s host=%s file=%s confirmed=%s total=%s error_type=%s',
                                   job_id, direction, self.settings.host, last_event.get('name', ''),
                                   last_event.get('done', 0), last_event.get('size', 0), type(ex).__name__)

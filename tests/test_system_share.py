@@ -106,6 +106,7 @@ class SystemShareTests(unittest.TestCase):
         receiver.mkdir()
         (receiver/'应用.apk').write_bytes(b'existing local APK')
         w=self.create_window()
+        w.save_zip.setChecked(True)
         w.busy=True
         w.auto_tick()
         self.wait_for(lambda:not w.maintenance_running)

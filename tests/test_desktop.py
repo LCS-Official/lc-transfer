@@ -66,9 +66,10 @@ class DesktopTests(unittest.TestCase):
             window.close()
             self.app.processEvents()
 
-    def test_actual_window_downloads_single_files_and_zip_with_live_history(self):
+    def test_actual_window_downloads_files_folders_and_optional_zip_with_live_history(self):
         from unittest.mock import patch
         from test_transfer import TransferTests
+        from transfer_core import Cancelled, Phone
         import zipfile
         fixture = TransferTests('test_thumbnail_and_names')
         TransferTests.setUpClass()
@@ -102,6 +103,7 @@ class DesktopTests(unittest.TestCase):
 
                 wait_finished()
                 self.assertTrue(window.connected)
+                self.assertFalse(window.save_zip.isChecked())
                 self.assertEqual(window.category, 'recent')
                 self.assertTrue(window.nav['recent'].isChecked())
                 window.choose_category('files')
@@ -122,7 +124,31 @@ class DesktopTests(unittest.TestCase):
                 self.assertEqual((receiver / '照片.jpg').read_bytes(), b'existing local photo')
                 self.assertEqual((receiver / '照片 (1).jpg').read_bytes(), payloads['照片.jpg'])
                 self.assertFalse(list(receiver.glob('*.zip')))
+                saved_folders = []
+                for _ in range(2):
+                    window.transfer('download', files)
+                    self.assertFalse(window.save_zip.isEnabled())
+                    wait_finished()
+                    job = window.history.snapshot()['jobs'][0]
+                    self.assertEqual(job['state'], 'done')
+                    self.assertEqual(job['archive'], '')
+                    saved_folder = Path(job['target'])
+                    self.assertEqual(saved_folder.parent, receiver.resolve())
+                    self.assertTrue(saved_folder.is_dir())
+                    self.assertEqual({p.name for p in saved_folder.iterdir()}, set(payloads))
+                    for item in job['files']:
+                        self.assertEqual(item['state'], 'done')
+                        self.assertEqual(Path(item['target']).parent, saved_folder)
+                        self.assertEqual(Path(item['target']).read_bytes(), payloads[item['name']])
+                    self.assertIn(str(saved_folder), window.status.text())
+                    saved_folders.append(saved_folder)
+                self.assertNotEqual(*saved_folders)
+                self.assertTrue(window.save_zip.isEnabled())
+                self.assertFalse(list(receiver.glob('*.zip')))
+                window.save_zip.setChecked(True)
                 window.transfer('download', files)
+                # Capture the option on the UI thread; this cannot change an active transfer.
+                window.save_zip.setChecked(False)
                 wait_finished()
                 job = window.history.snapshot()['jobs'][0]
                 self.assertEqual(job['state'], 'done')
@@ -134,9 +160,40 @@ class DesktopTests(unittest.TestCase):
                 window.transfer('download', [e for e in window.entries if e.is_dir])
                 wait_finished()
                 job = window.history.snapshot()['jobs'][0]
-                self.assertTrue(job['archive'].endswith('.zip'))
-                with zipfile.ZipFile(job['archive']) as archive:
-                    self.assertEqual(archive.read('单独文件夹/说明.txt').decode(), 'folder contents')
+                self.assertEqual(job['state'], 'done')
+                self.assertEqual(job['archive'], '')
+                self.assertEqual((Path(job['target']) / '单独文件夹/说明.txt').read_text(encoding='utf-8'), 'folder contents')
+                self.assertEqual(Path(job['files'][0]['target']).read_text(encoding='utf-8'), 'folder contents')
+                window.save_zip.setChecked(True)
+                for selected in ([files[0]], [e for e in window.entries if e.is_dir]):
+                    window.transfer('download', selected)
+                    wait_finished()
+                    job = window.history.snapshot()['jobs'][0]
+                    self.assertEqual(job['state'], 'done')
+                    with zipfile.ZipFile(job['archive']) as archive:
+                        if selected[0].is_dir:
+                            self.assertEqual(archive.read('单独文件夹/说明.txt').decode(), 'folder contents')
+                        else:
+                            self.assertEqual(archive.read(selected[0].name), payloads[selected[0].name])
+                window.save_zip.setChecked(False)
+                original = Phone.read_blocks
+                reads = []
+                def cancel_second(phone, source, size):
+                    reads.append(size)
+                    if len(reads) == 2:
+                        raise Cancelled('test cancellation')
+                    yield from original(phone, source, size)
+                with patch.object(Phone, 'read_blocks', cancel_second):
+                    window.transfer('download', files)
+                    wait_finished()
+                job = window.history.snapshot()['jobs'][0]
+                self.assertEqual(job['state'], 'cancelled')
+                self.assertEqual(job['archive'], '')
+                partial = Path(job['target'])
+                self.assertEqual((partial / files[0].name).read_bytes(), payloads[files[0].name])
+                self.assertFalse((partial / files[1].name).exists())
+                self.assertFalse(list(partial.glob('*.part')))
+                self.assertEqual([f['state'] for f in job['files']], ['done', 'cancelled'])
                 self.assertTrue((fixture.remote / '.lc-transfer' / 'history.json').exists())
                 window.transfer_dialog.close()
                 window.close()
